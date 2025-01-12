@@ -1,0 +1,39 @@
+
+  .container::before {
+    content: "";
+    /* 伪元素需要内容属性，即使它是空的 */
+    position: absolute;
+    /* 绝对定位使得伪元素可以覆盖在容器内容之上 */
+    top: 0;
+    /* 遮罩层从容器顶部开始 */
+    left: 0;
+    /* 遮罩层从容器左侧开始 */
+    width: 100%;
+    /* 遮罩层宽度与容器相同 */
+    height: 100%;
+    /* 遮罩层高度与容器相同 */
+    background-color: rgba(0, 0, 0, 0.7);
+    /* 使用半透明的黑色作为遮罩层，你可以调整颜色和透明度 */
+  }
+
+
+
+  .id,
+  .des {
+    color: #fff;
+    z-index: 1000;
+    position: relative;
+
+  }
+
+  .lb {
+    color: #fff;
+  }
+
+  .lb span {
+    color: #fff;
+  }
+
+  .data_box {
+    box-shadow: 0 5px 10px 0 rgb(255 255 255 / 20%);
+  }

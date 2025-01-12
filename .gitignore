@@ -1,0 +1,15 @@
+# 依赖
+node_modules
+alemon.config.yaml
+alemon.config.json
+*.lock
+data
+lib
+*.log.ts
+test.js
+logs
+gui
+log
+*.log
+*.logs
+*.memory-card.json

@@ -1,0 +1,97 @@
+.head_box .sv_logo {
+  position: absolute;
+  bottom: -34px;
+  right: 75px;
+  width: 115px;
+}
+
+.list .itemOne {
+  position: relative;
+}
+
+.luckyBag {
+    width: 20px;
+    height: 20px;
+}
+.ying {
+    width: 100px;
+    margin-right: 0px;
+    
+}
+.luckCharmBox {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    left: 140px;
+    top: 0px;
+}
+
+.luckCharm {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    
+}
+.luckySignBox {
+    position: relative;
+    display: flex;
+    background-size: 200%;
+    background-repeat: no-repeat;
+    background-position: 73% 25px;
+}
+.fortuneSummaryBox {
+    position: absolute; 
+    width: 160px; 
+    height: 80px; 
+    top: -90px; 
+    right: 63px;
+}
+.fortuneSummary {
+    position: absolute;
+    color: white; 
+    font-weight: 600;
+    top: -9px; 
+    right: 120px; 
+    transform: translateX(50%); 
+    font-size: 20px;
+}
+.qian {
+    position: absolute;
+    width: 20px;
+    right: 51px;
+    bottom: 67px;
+    transform: rotate(15deg);
+}
+.star-img {
+  width: 35px;
+  height: 35px;
+}
+
+fieldset {
+    border-radius: 6px;
+}
+
+.luckyBox {
+    margin: 10px 0 0 5px;
+}
+
+.avatar_box {
+    position: absolute; 
+    width: 50px; 
+    height: 50px; 
+    top: 15px; 
+    left: 8px; 
+    overflow: hidden; 
+    border-radius: 50%; 
+    border: 2px solid white; 
+    box-shadow: 0 5px 7px 0 rgb(0 0 0 / 30%);
+}
+
+.user_avator {
+    position: absolute; 
+    width: 100%; 
+    height: 100%; 
+    border-radius: 50%; 
+    object-fit: cover;
+}

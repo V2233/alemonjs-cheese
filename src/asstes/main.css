@@ -1,0 +1,178 @@
+@import url('@src/asstes/root.css');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "tttgbnumber";
+  src: url("@src/asstes/font/tttgbnumber.ttf");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: "华文中宋";
+  src: url("@src/asstes/font/华文中宋.ttf");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: "NZBZ";
+  src: url('@src/asstes/font/NZBZ.TTF');
+  font-weight: normal;
+  font-style: normal;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+}
+body {
+  max-width: 768px;
+  min-width: 480px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: sans-serif;
+  font-size: 16px;
+  width: 530px;
+  transform: scale(2.0);
+  transform-origin: 0 0;
+}
+.container {
+  position: relative;
+  width: 100%;
+  background-size: auto 100%;
+  padding: 20px 15px 10px 15px;
+  background-color: rgba(255, 255, 255, 0);
+  /* border: 2px solid red; */
+}
+.head_box {
+  position: relative;  
+  font-family: tttgbnumber;
+  padding: 10px 20px;
+  border-radius: 15px;
+}
+
+.head_box .id_text {
+  /* font-family: NZBZ; */
+  font-size: 24px;
+  font-weight: 600;
+}
+.head_box .day_text {
+  font-size: 16px;
+}
+
+.head_box .sv_logo {
+  position: absolute;
+  top: -20px;
+  right: 5px;
+  width: 97px;
+}
+
+.head_box .avator_box {
+  position: absolute; 
+  width: 50px; 
+  height: 50px; 
+  top: 50%; 
+  transform: translateY(-50%); 
+  right: 20px; 
+  overflow: hidden;
+  border-radius: 50%; 
+  box-shadow: 0px 0px 0px 2px rgba(255, 255, 255, 1);
+}
+
+.head_box .user_avator {
+  position: absolute; 
+  width: 100%; 
+  height: 100%; 
+  border-radius: 50%; 
+  object-fit: cover; 
+}
+
+.data_box {
+  border-radius: 15px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding: 20px 0px 0px 0px;
+  box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.3); 
+  position: relative;
+}
+.tab_lable {
+  position: absolute;
+  top: -10px;
+  left: -8px;
+  color: black;
+  font-family: "华文中宋";
+  font-size: 14px;
+  padding: 3px 10px;
+  border-radius: 15px 0px 15px 15px;
+}
+.page_lable {
+  margin-bottom: 0px;
+  margin-right: 0px;
+  color: black;
+  font-family: "华文中宋";
+  font-size: 14px;
+  text-align: center;
+  padding: 3px 10px;
+  border-radius: 0px 0px 15px 15px;
+}
+
+.list{
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.list .itemOne,.item {
+  /* width: 235px; */
+  width: 100%;
+  padding: 8px 6px 8px 6px;
+  border-radius: 8px;
+  margin: 0 5px 5px 5px;
+  border-radius: 12px;
+  border: 2px solid transparent; 
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+  backdrop-filter: blur(10)
+}
+.list .item {
+  display: flex;
+  align-items: center;
+}
+.list .item .icon path {
+  fill: black;
+}
+.list .item .icon {
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  position: relative;
+  flex-shrink: 0;
+}
+.list .itemOne .title, .list .item .title {
+  font-family: "华文中宋";
+  font-size: 16px;
+  margin-left: 6px;
+  line-height: 20px;
+}
+.list .itemOne .title .dec, .list .item .title .dec {
+  font-family: "华文中宋";
+  font-size: 12px;
+  color: #999; 
+  margin-top: 2px;
+}
+.logo {
+  font-size: 14px;
+  font-family: "tttgbnumber";
+  text-align: center;
+  color: #515151;
+  z-index: 100;
+}
+
+
+
