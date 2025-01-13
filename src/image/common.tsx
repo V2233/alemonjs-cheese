@@ -22,7 +22,6 @@ export function Container({ children,style,copyright }: IContainerProps) {
     })
     return (
         <div className="container" id="container" style={stl}>
-            {cfg.model === 'custom' && <img className='w-full h-full absolute' src={cfg.bgurl} style={{zIndex: '-10'}}/>}
             {children}
             <Copyright text={copyright}/>
         </div>
@@ -141,6 +140,7 @@ export function Template(data: ITemplate): React.ReactNode {
                 {data.globalStyle}
             </head>
             <body style={{ width: cfg.width, transform: `scale(${cfg.ratio})`, ...data.bodyStyle }}>
+                {cfg.model === 'custom' && <img className='w-full h-full absolute' src={cfg.bgurl} style={{zIndex: '-10'}}/>}
                 {data.children}
             </body>
         </html >
