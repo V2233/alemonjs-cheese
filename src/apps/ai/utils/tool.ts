@@ -84,8 +84,9 @@ export default class AiTool {
         let memberMap = {}
         let msgSet = new Set(this.e.MessageText.split(''))
         for (let [user_id, info] of Object.entries(groupMemberMap)) {
-            for (let word of info.nickname) {
-                if (msgSet.has(word)) {
+            if(!info.nickname) continue
+            for (let word of String(info.nickname || '')) {
+                if (msgSet.has(word) && word !== '') {
                     memberMap[user_id] = {
                         '昵称': info.nickname,
                         '头像': info.avatar

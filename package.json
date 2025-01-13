@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "alemonjs插件",
   "author": "smallv",
-  "main": "index.js",
+  "main": "lib/index.js",
   "type": "module",
-  "private": true,
+  "private": false,
   "scripts": {
     "dev": "lvy dev",
     "build": "lvy build",
