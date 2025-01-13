@@ -1,6 +1,6 @@
 {
   "name": "alemonjs-cheese",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "alemonjs插件",
   "author": "smallv",
   "main": "lib/index.js",
