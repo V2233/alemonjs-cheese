@@ -13,18 +13,31 @@ import { fortuneList, lots } from './utils/fortune'
 import LuckHandler from './utils/handler'
 
 import type { ILuckRecord, IUserLuckHistory } from '@src/types/luck'
-import { sleep } from '@src/utils'
+import { sleep, scheduleTask } from '@src/utils'
 
 const luckDataPath = join(pluginInfo.DATA_PATH, 'luckDB.json');
 if (!existsSync(luckDataPath)) writeFileSync(luckDataPath, JSON.stringify({}), 'utf-8');
 
 let luckRecord:ILuckRecord = JSON.parse(readFileSync(luckDataPath, 'utf8')) || {}
 
+// 刷新每日运势状态
+scheduleTask(()=>{
+  Object.keys(luckRecord).forEach(key => {
+    luckRecord[key].isTested = false
+  })
+  writeFileSync(luckDataPath, JSON.stringify(luckRecord), 'utf-8')
+  console.warn(`[奶酪刷新运势状态]：如定时刷新失败管理员可发送【刷新运势】进行刷新！`)
+},{
+  hour: 0,
+  minute: 0,
+  second: 0
+})
+
 export default OnResponse(async (event, next) => {
   const Send = useSend(event)
 
   // 手动刷新运势定时任务（应对每日定时刷新失败问题）
-  if (/^(\/|#)?刷新$/.test(event.MessageText) && event.IsMaster) {
+  if (/^(\/|#)?刷新运势$/.test(event.MessageText) && event.IsMaster) {
     Object.keys(luckRecord).forEach(key => {
       luckRecord[key].isTested = false
     })

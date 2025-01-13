@@ -62,7 +62,7 @@ export function scheduleTask(executeTask: Function, time: ITime = {}): NodeJS.Ti
     return setTimeout(() => {
         executeTask();
         // 重新调度任务，以确保每天都能执行
-        scheduleTask(executeTask);
+        scheduleTask(executeTask,time);
     }, msUntilExecution);
 }
 
