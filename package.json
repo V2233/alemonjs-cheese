@@ -57,6 +57,11 @@
     "prettier": "^3.0.3",
     "tailwindcss": "^3.4.17"
   },
+  "export": {
+    ".": "./lib/index.js",
+    "./package": "./package.json",
+    "./desktop": "./lib/desktop.js"
+  },
   "files": [
     "lib/**/*",
     "public/**/*",
@@ -68,5 +73,21 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
     "access": "public"
+  },
+  "alemonjs": {
+    "desktop": {
+      "commond": [
+        {
+          "name": "cheese",
+          "commond": "open.cheese"
+        }
+      ],
+      "sidebars": [
+        {
+          "name": "cheese",
+          "commond": "cheese.init"
+        }
+      ]
+    }
   }
 }
