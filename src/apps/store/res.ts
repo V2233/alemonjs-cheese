@@ -1,5 +1,3 @@
-import { client as QQClient } from '@alemonjs/qq'
-import { client as OneBotClient } from '@alemonjs/onebot'
 import { pluginInfo } from "@src/package"
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
@@ -27,7 +25,7 @@ class GroupStore {
         let group_map = {}
         switch (platform) {
             case 'qq': {
-                const qqGroup = await QQClient.pickGroup(Number(group_id))
+                const qqGroup = await (global.client as any).pickGroup(Number(group_id))
                 const qqGroupMap = await qqGroup.getMemberMap()
                 for (const [user_id, user] of qqGroupMap) {
                     group_map[user_id] = {
@@ -43,7 +41,7 @@ class GroupStore {
                 return this.map[group_id]
             }
             case 'one-bot': {
-                const onebotGroup = await OneBotClient.sendApi({
+                const onebotGroup = await (global.client as any).sendApi({
                     action: 'get_group_member_list',
                     params: {
                         group_id: Number(group_id)

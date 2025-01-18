@@ -2,8 +2,6 @@ import { type PublicEventMessageCreate, Text, Image, Mention, Voice, Video, Emoj
 import { Pictures } from '@src/image/index'
 import { faceMap, getRandomFaces } from "./face"
 import { requestBuffer } from '@src/utils/index'
-import { client as QQClient } from '@alemonjs/qq'
-import { client as OnebotClient } from '@alemonjs/onebot'
 import { groupStore } from '@src/apps/store/res'
 import { toMarkdown, toMermaid } from '@src/utils/marked'
 import Cfg from '@src/utils/config'
@@ -14,11 +12,14 @@ export default class AiTool {
         this.e = e || {}
         this.e.group_name = ''
         this.platform = this.e.Platform
+        this.client = global.client
     }
 
     template(type, params) {
         return `${type === null ? '' : '<<' + type + '>>'}${params === null ? '' : '{{' + params + '}}'}`
     }
+
+    client = global.client as any
 
     tagMap = {
         '1': 'at',
@@ -273,10 +274,10 @@ export default class AiTool {
                         let [user_id, times] = seg.data.split(':', 2)
                         switch(this.platform) {
                             case 'qq':
-                                await QQClient.pickMember(Number(this.e.GuildId),Number(user_id)).thumbUp(Number(times) || 1)
+                                await this.client.pickMember(Number(this.e.GuildId),Number(user_id)).thumbUp(Number(times) || 1)
                                 break
                             case 'onebot':
-                                await OnebotClient.sendApi({
+                                await this.client.sendApi({
                                     'action': 'send_like',
                                     'params': {
                                         user_id: Number(this.e.UserId),
@@ -292,10 +293,10 @@ export default class AiTool {
                     case 'send_poke': {
                         switch(this.platform) {
                             case 'qq':
-                                await QQClient.pickMember(Number(this.e.GuildId),Number(this.e.UserId)).poke()
+                                await this.client.pickMember(Number(this.e.GuildId),Number(this.e.UserId)).poke()
                                 break
                             case 'onebot':
-                                await OnebotClient.sendApi({
+                                await this.client.sendApi({
                                     'action': 'group_poke',
                                     'params': {
                                         group_id: Number(this.e.GuildId),
@@ -315,11 +316,11 @@ export default class AiTool {
                     case 'set_group_name': {
                         switch(this.platform) {
                             case 'qq':
-                                await QQClient.pickGroup(Number(this.e.GuildId)).setName(seg.data)
+                                await this.client.pickGroup(Number(this.e.GuildId)).setName(seg.data)
                                 ret.push(Text('改好啦，你看看有没有生效'))
                                 break
                             case 'onebot':
-                                await OnebotClient.sendApi({
+                                await this.client.sendApi({
                                     'action': 'set_group_name',
                                     'params': {
                                         group_id: Number(this.e.GuildId),
@@ -337,11 +338,11 @@ export default class AiTool {
                         let [user_id, newMemberCard] = seg.data.split(':', 2)
                         switch(this.platform) {
                             case 'qq':
-                                await QQClient.pickGroup(Number(this.e.GuildId)).setCard(Number(user_id),newMemberCard)
+                                await this.client.pickGroup(Number(this.e.GuildId)).setCard(Number(user_id),newMemberCard)
                                 ret.push(Text('改好啦，你看看有没有生效'))
                                 break
                             case 'onebot':
-                                await OnebotClient.sendApi({
+                                await this.client.sendApi({
                                     'action': 'set_group_name',
                                     'params': {
                                         group_id: Number(this.e.GuildId),
@@ -359,11 +360,11 @@ export default class AiTool {
                         let [user_id, newMemberTitle] = seg.data.split(':', 2)
                         switch(this.platform) {
                             case 'qq':
-                                await QQClient.pickMember(Number(this.e.GuildId),Number(user_id)).setTitle(newMemberTitle)
+                                await this.client.pickMember(Number(this.e.GuildId),Number(user_id)).setTitle(newMemberTitle)
                                 ret.push(Text('改好啦，你看看有没有生效'))
                                 break
                             case 'onebot':
-                                await OnebotClient.sendApi({
+                                await this.client.sendApi({
                                     'action': 'set_group_special_title',
                                     'params': {
                                         group_id: Number(this.e.GuildId),
@@ -381,10 +382,10 @@ export default class AiTool {
                         let [user_id, banTime] = seg.data.split(':', 2)
                         switch(this.platform) {
                             case 'qq':
-                                await QQClient.pickMember(Number(this.e.GuildId),Number(user_id)).mute(Number(banTime) || 0)
+                                await this.client.pickMember(Number(this.e.GuildId),Number(user_id)).mute(Number(banTime) || 0)
                                 break
                             case 'onebot':
-                                await OnebotClient.sendApi({
+                                await this.client.sendApi({
                                     'action': 'set_group_ban',
                                     'params': {
                                         group_id: Number(this.e.GuildId),
@@ -401,10 +402,10 @@ export default class AiTool {
                     case 'set_group_whole_ban': {
                         switch(this.platform) {
                             case 'qq':
-                                await QQClient.pickGroup(Number(this.e.GuildId)).muteAll(Boolean(seg.data))
+                                await this.client.pickGroup(Number(this.e.GuildId)).muteAll(Boolean(seg.data))
                                 break
                             case 'onebot':
-                                await OnebotClient.sendApi({
+                                await this.client.sendApi({
                                     'action': 'set_group_ban',
                                     'params': {
                                         group_id: Number(this.e.GuildId),

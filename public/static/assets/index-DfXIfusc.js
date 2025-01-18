@@ -1,0 +1,1 @@
+import{e as s,t,b as o,D as a,o as n,_}from"./index-pbmhOlsh.js";const c={class:"box"},r=s({__name:"index",setup(d){return a(),(p,e)=>(n(),t("div",c,e[0]||(e[0]=[o("div",{class:"btn"},null,-1)])))}}),l=_(r,[["__scopeId","data-v-7d9c8ea1"]]);export{l as default};
