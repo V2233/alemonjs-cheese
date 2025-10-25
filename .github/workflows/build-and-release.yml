@@ -24,8 +24,25 @@ jobs:
       - name: 检查分支
         if: github.ref != 'refs/heads/main'
         run: |
-          echo "错误: 该工作流只能在 main 分支上运行。"
-          exit 1
+          CURRENT_BRANCH="${{ github.ref_name }}"
+          ALLOWED_BRANCHES=("main" "master")
+          BRANCH_ALLOWED=false
+
+          for branch in "${ALLOWED_BRANCHES[@]}"; do
+            if [[ "$CURRENT_BRANCH" == "$branch" ]]; then
+              BRANCH_ALLOWED=true
+              break
+            fi
+          done
+
+          if [[ "$BRANCH_ALLOWED" == "false" ]]; then
+            echo "错误: 该工作流只能在 main 或 master 分支上运行。"
+            echo "当前分支: $CURRENT_BRANCH"
+            echo "请切换到 main 或 master 分支再执行发布操作。"
+            exit 1
+          fi
+
+          echo "✅ 当前分支 $CURRENT_BRANCH 允许执行发布操作"
 
       - name: 设置nodejs版本
         uses: actions/setup-node@v4
