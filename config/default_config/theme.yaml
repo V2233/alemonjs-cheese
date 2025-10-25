@@ -1,0 +1,10 @@
+bgurl: https://api.suyanw.cn/api/comic2 #背景图片,或是本地图片绝对路径
+mask_color: FF4500 #蒙版色调
+mask_degree: 90 #蒙版渐变角度(0-360)
+mask_opacity: 0.5 #蒙版透明度
+width: 530px #图片宽度480px-768px
+header_visible: true #是否展示顶部标题栏
+model: custom # light|darK|custom
+ratio: 1.5 # 渲染时分辨率，表示原图的多少倍，越大图片体积平方级增大
+compress: 0 #目标压缩单位kB，为0则表示不压缩
+quality: 90 #图像质量，低于100则强制转成jpeg有损压缩
