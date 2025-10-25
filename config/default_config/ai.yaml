@@ -1,5 +1,0 @@
-is_open: false
-api_key: '' # openai密钥
-model: 'gpt-4o-mini'
-prefix: 'ai'
-ctx_num: 15
