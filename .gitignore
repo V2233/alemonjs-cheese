@@ -5,6 +5,7 @@ alemon.config.json
 *.lock
 data
 lib
+link
 *.log.ts
 test.js
 logs

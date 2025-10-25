@@ -1,16 +1,16 @@
 export interface ICouple {
-    man: string;
-	woman: string;
-	favor: number;
-	id?: number;
+  man: string;
+  woman: string;
+  favor: number;
+  id?: number;
 }
 
 export interface ICoupleNick {
-    man: string;
-	woman: string;
+  man: string;
+  woman: string;
 }
 
 export interface ICouplesData {
-    ren: ICouple[],
-    renmin: ICoupleNick[]
+  ren: ICouple[];
+  renmin: ICoupleNick[];
 }
