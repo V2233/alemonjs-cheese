@@ -105,6 +105,8 @@ jobs:
           mkdir -p dist-release
           # cp -rf ./dist dist-release/dist # bundle
           cp -rf ./lib dist-release/lib
+          cp -rf ./public dist-release/public
+          cp -rf ./config dist-release/config
           cp -rf ./.puppeteerrc.cjs dist-release/.puppeteerrc.cjs
           cp -rf ./package.json dist-release/package.json
           cp -rf ./README.md dist-release/README.md
