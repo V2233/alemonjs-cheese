@@ -1,6 +1,6 @@
 {
   "name": "alemonjs-cheese",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "alemonjs插件",
   "author": "smallv",
   "main": "lib/index.js",
@@ -20,7 +20,9 @@
     "openai": "^4.77.0",
     "qrcode": "^1.5.4",
     "sharp": "^0.33.5",
-    "text-to-svg": "^3.1.5"
+    "text-to-svg": "^3.1.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "export": {
     ".": "./lib/index.js",
