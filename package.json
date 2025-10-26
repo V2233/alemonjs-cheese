@@ -1,11 +1,10 @@
 {
   "name": "alemonjs-cheese",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "alemonjs插件",
   "author": "smallv",
   "main": "lib/index.js",
   "type": "module",
-  "private": true,
   "scripts": {
     "dev": "lvy dev",
     "build": "lvy build",
@@ -31,12 +30,15 @@
     "openai": "^4.77.0",
     "qrcode": "^1.5.4",
     "sharp": "^0.33.5",
-    "text-to-svg": "^3.1.5"
+    "text-to-svg": "^3.1.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@alemonjs/gui": "^2.1.0-alpha.5",
     "@alemonjs/kook": "^2.1.0-alpha.3 ",
     "@alemonjs/onebot": "2.1.0-alpha.11",
+    "@alemonjs/qq-bot": "^2.1.0-alpha.19",
     "@alemonjs/qq": "0.3.5",
     "@types/express": "^5.0.0",
     "@types/node": "^18",
@@ -66,9 +68,6 @@
     "lib/**/*",
     "public/**/*",
     "config/**/*"
-  ],
-  "workspaces": [
-    "packages/*"
   ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org",

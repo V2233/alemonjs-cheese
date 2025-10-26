@@ -8,20 +8,19 @@ alemonjs目录下安装依赖：
 yarn add alemonjs-cheese -W
 ```
 
+或
+
+```sh
+git clone --depth=1 -b release https://github.com/V2233/alemonjs-cheese ./packages/alemonjs-cheese
+```
+
 ## 配置
 
-alemon.config.yaml
+在alemon.config.yaml添加：
 
 ```yaml
 apps:
   - 'alemonjs-cheese'
-
-gui:
-  port: 9602
-
-pm2:
-  name: 'gui'
-  script: 'node index.js --login gui'
 ```
 
 
