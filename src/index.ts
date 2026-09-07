@@ -6,6 +6,6 @@ export default defineChildren({
     };
   },
   onCreated() {
-    logger.info("Start OpenAI APP");
+    logger.info("[cheese]Start OpenAI APP");
   },
 });

@@ -1,4 +1,4 @@
-import { renders } from "jsxp";
+import { renderComponentIsHtmlToBuffer } from "jsxp";
 import { compressImageFromBuffer } from "@src/utils/imageProcessor";
 
 import Help from "@src/image/conponent/help";
@@ -13,7 +13,7 @@ import HtmlTemplate from "@src/image/conponent/html_template";
 import QRCode from "@src/image/conponent/qrcode";
 import { EmoList, MakeEmo } from "@src/image/conponent/emotion";
 
-const renderComponents = renders({
+const components = {
   help: Help,
   setting: Setting,
   todayLuck: TodayLuck,
@@ -26,11 +26,14 @@ const renderComponents = renders({
   emoList: EmoList,
   makeEmo: MakeEmo,
   htmlTemplate: HtmlTemplate,
-});
+} as const
 
-export const Pictures: typeof renderComponents = (key, options, name) => {
+type MyComponents = typeof components
+
+export const Pictures = <K extends keyof MyComponents>(key:K, options:Parameters<MyComponents[K]>[0], name?):Promise<boolean |  Buffer<ArrayBufferLike>> => {
   return new Promise((resolve, reject) => {
-    renderComponents(key, options, name).then((res) => {
+    //@ts-ignore TODO: type error
+    renderComponentIsHtmlToBuffer(components[key], options, name).then((res) => {
       if (typeof res == "boolean") {
         reject(false);
       } else {
@@ -42,6 +45,8 @@ export const Pictures: typeof renderComponents = (key, options, name) => {
             reject(false);
           });
       }
+    }).catch(err=>{
+      logger.warn(`[cheese]图片渲染错误：`, err)
     });
   });
 };
