@@ -1,4 +1,4 @@
-bgurl: https://api.suyanw.cn/api/comic2 #背景图片,或是本地图片绝对路径
+bgurl: https://acg.yaohud.cn/dm/AI.php #背景图片,或是本地图片绝对路径
 mask_color: FF4500 #蒙版色调
 mask_degree: 90 #蒙版渐变角度(0-360)
 mask_opacity: 0.5 #蒙版透明度
