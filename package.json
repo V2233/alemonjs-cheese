@@ -1,13 +1,13 @@
 {
   "name": "alemonjs-cheese",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "alemonjs插件",
   "author": "smallv",
   "main": "lib/index.js",
   "type": "module",
   "dependencies": {
-    "@mermaid-js/mermaid-cli": "^11.17.0",
     "axios": "^1.20.0",
+    "chokidar": "^5.0.0",
     "classnames": "^2.5.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -17,10 +17,12 @@
     "image-size": "^2.0.2",
     "jsxp": "^1.4.0",
     "marked": "18.0.11",
+    "node-fetch": "^3.3.2",
     "openai": "^7.10.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "sebastianjs": "^0.4.0",
     "sharp": "^0.35.4",
     "text-to-svg": "^3.1.5"
   },
