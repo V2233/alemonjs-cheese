@@ -97,13 +97,15 @@ export default OnResponse(async (event, next) => {
     if (/逆天改命/.test(event.MessageText)) {
       if (!playerObj() || playerObj().list.length == 0) {
         sendAtText('你还没看今天的运势呢，改什么命啊o(≧▽≦o)', {
-          btns: fbg => fbg.addRow().addButton('今日运势', '今日运势', { autoEnter: true }),
+          md: fmd => fmd.addNewline(),
+          btns: fbg => fbg.addRow().addButton('今日运势', '今日运势'),
         });
         return;
       }
       if (atUser) {
         sendAtText('哼~你还想帮别人改命？', {
-          btns: fbg => fbg.addRow().addButton('逆天改命', '逆天改命', { autoEnter: true }),
+          md: fmd => fmd.addNewline(),
+          btns: fbg => fbg.addRow().addButton('逆天改命', '逆天改命'),
         });
         return;
       }
