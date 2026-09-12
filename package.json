@@ -19,8 +19,8 @@
     "check-format": "git diff --exit-code"
   },
   "dependencies": {
-    "@mermaid-js/mermaid-cli": "^11.17.0",
     "axios": "^1.20.0",
+    "chokidar": "^5.0.0",
     "classnames": "^2.5.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -30,10 +30,12 @@
     "image-size": "^2.0.2",
     "jsxp": "^1.4.0",
     "marked": "18.0.11",
+    "node-fetch": "^3.3.2",
     "openai": "^7.10.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "sebastianjs": "^0.4.0",
     "sharp": "^0.35.4",
     "text-to-svg": "^3.1.5"
   },
@@ -49,11 +51,9 @@
     "@types/ws": "^8.5.13",
     "alemonjs": "^2.1.103",
     "cssnano": "^8",
-    "ioredis": "^6.0.0",
     "lvyjs": "^0.3.0-alpha.5",
-    "mysql2": "^3.6.2",
+    "oxfmt": "^0.67.0",
     "pm2": "^5.3.0",
-    "prettier": "^3.0.3",
     "tailwindcss": "^3.4.17"
   },
   "export": {

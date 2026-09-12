@@ -1,0 +1,51 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": true,
+  "printWidth": 100,
+  "tabWidth": 2,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "endOfLine": "lf",
+  "arrowParens": "avoid",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "singleAttributePerLine": false,
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "**/map.js",
+    "**/*.hbs",
+    "**/*.md",
+    "**/*.mdx",
+    "**/*.map.js",
+    "**/*.min.js",
+    "**/node_modules/",
+    "**/build/",
+    "**/assets/",
+    "**/dist/",
+    "**/bin/",
+    "**/lib/",
+    "data/",
+    "logs/"
+  ],
+  "sortImports": {
+    "groups": [
+      [
+        "builtin",
+        "external"
+      ],
+      [
+        "internal",
+        "subpath"
+      ],
+      [
+        "parent",
+        "sibling",
+        "index"
+      ],
+      "unknown"
+    ],
+    "ignoreCase": false
+  }
+}

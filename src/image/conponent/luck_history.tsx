@@ -1,11 +1,11 @@
-import React from 'react'
-import css_output from '@src/asstes/main.css'
 import css_luck from '@src/asstes/luck/luck.css'
+import css_output from '@src/asstes/main.css'
+import React from 'react'
 
-import { Template, Container, HeaderBox, Item, DataBox } from '../common'
 import { pluginInfo } from '@src/package'
-import { getTime } from '@src/utils/index';
-import type { IUserData,IFortuneItem } from '@src/types/luck'
+import type { IFortuneItem, IUserData } from '@src/types/luck'
+import { getTime } from '@src/utils/index'
+import { Container, DataBox, HeaderBox, Item, Template } from '../common'
 
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
@@ -111,7 +111,7 @@ export default function App({ data, theme }: Props) {
         <Template styleSheet={[css_output, css_luck]} theme={theme}>
             <Container>
                 <HeaderBox title='今日运势' description='Good Luck！'>
-                    <img className="sv_logo" src={`${publicPath}/${data.starcolor}.png`} />
+                    {/* <img className="sv_logo" src={`${publicPath}/${data.starcolor}.png`} /> */}
                 </HeaderBox>
 
                 <DataBox>

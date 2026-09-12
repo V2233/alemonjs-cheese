@@ -1,9 +1,9 @@
-import React from 'react'
-import css_output from '@src/asstes/main.css'
 import css_luck from '@src/asstes/luck/luck.css'
-import { Template, Container, HeaderBox, DataBox, Item } from '../common'
+import css_output from '@src/asstes/main.css'
 import { pluginInfo } from '@src/package'
 import { join } from 'path'
+import React from 'react'
+import { Container, DataBox, HeaderBox, Item, Template } from '../common'
 
 
 interface IFortuneData {
@@ -50,7 +50,7 @@ export default function App({ data, theme }: Props) {
         <Template styleSheet={[css_output, css_luck]} theme={theme}>
             <Container>
                 <HeaderBox title='今日运势' description='Good Luck！'>
-                    <img className="sv_logo" src={join(publicPath,`${data.starcolor}.png`)} />
+                    {/* <img className="sv_logo" src={join(publicPath,`${data.starcolor}.png`)} /> */}
                 </HeaderBox>
 
                 <DataBox>

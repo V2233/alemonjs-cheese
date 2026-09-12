@@ -1,9 +1,9 @@
-import React from 'react'
 import css_output from '@src/asstes/main.css'
+import type { IGengItem } from '@src/types/meme'
 import Cfg from '@src/utils/config'
 import { getTime } from '@src/utils/index'
-import { Template, HeaderBox, Container, DataBox, TabLable, Item } from '../common'
-import type { IGengItem } from '@src/types/meme'
+import React from 'react'
+import { Container, DataBox, HeaderBox, Item, TabLable, Template } from '../common'
 
 
 interface IData {
@@ -37,7 +37,7 @@ export default function App({ data, theme }: Props) {
                             <img className='w-auto rounded-s' src={data.url}/>
                         </Item>
                         <Item classname="itemOne">
-                            <div className='text-3xl font-bold text-wrap mb-2'>{data.tip}</div>
+                            <div className='text-3xl font-bold text-wrap mb-2'><pre className='whitespace-pre-wrap break-words'>{data.tip}</pre></div>
                             {data.choices && data.choices.map((choice,index:number)=>(<div className='text-2xl font-semibold text-wrap' key={choice.id}><span style={{color: '#' + cfg.mask_color}}>【{index}】</span>{choice.title}</div>))}
                         </Item>
                     </div>

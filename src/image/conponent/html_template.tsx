@@ -1,10 +1,8 @@
-import React from 'react'
-import css_output from '@src/asstes/main.css'
+import css_output from '@src/asstes/main.css';
+import React from 'react';
 
-import { Template, HeaderBox, Container, TabLable, Item } from '../common'
 import { getTime } from '@src/utils/index';
-
-
+import { Container, HeaderBox, Item, TabLable, Template } from '../common';
 
 interface IData {
     title?: string,
