@@ -1,17 +1,16 @@
-import { renderComponentIsHtmlToBuffer } from "jsxp";
-import { compressImageFromBuffer } from "@src/utils/imageProcessor";
-
-import Help from "@src/image/conponent/help";
-import Setting from "@src/image/conponent/setting";
-import TodayLuck from "@src/image/conponent/today_luck";
-import LuckHistory from "@src/image/conponent/luck_history";
-import LoverRank from "@src/image/conponent/lover_rank";
-import MemeQs from "@src/image/conponent/meme_qs";
-import MemeRank from "@src/image/conponent/meme_rank";
-import Markdown from "@src/image/conponent/markdown";
-import HtmlTemplate from "@src/image/conponent/html_template";
-import QRCode from "@src/image/conponent/qrcode";
-import { EmoList, MakeEmo } from "@src/image/conponent/emotion";
+import { EmoList, MakeEmo } from '@src/image/conponent/emotion';
+import Help from '@src/image/conponent/help';
+import HtmlTemplate from '@src/image/conponent/html_template';
+import LoverRank from '@src/image/conponent/lover_rank';
+import LuckHistory from '@src/image/conponent/luck_history';
+import Markdown from '@src/image/conponent/markdown';
+import MemeQs from '@src/image/conponent/meme_qs';
+import MemeRank from '@src/image/conponent/meme_rank';
+import QRCode from '@src/image/conponent/qrcode';
+import Setting from '@src/image/conponent/setting';
+import TodayLuck from '@src/image/conponent/today_luck';
+import { compressImageFromBuffer } from '@src/utils/imageProcessor';
+import { renderComponentIsHtmlToBuffer } from 'jsxp';
 
 const components = {
   help: Help,
@@ -26,27 +25,33 @@ const components = {
   emoList: EmoList,
   makeEmo: MakeEmo,
   htmlTemplate: HtmlTemplate,
-} as const
+} as const;
 
-type MyComponents = typeof components
+type MyComponents = typeof components;
 
-export const Pictures = <K extends keyof MyComponents>(key:K, options:Parameters<MyComponents[K]>[0], name?):Promise<boolean |  Buffer<ArrayBufferLike>> => {
+export const Pictures = <K extends keyof MyComponents>(
+  key: K,
+  options: Parameters<MyComponents[K]>[0],
+  name?
+): Promise<boolean | Buffer<ArrayBufferLike>> => {
   return new Promise((resolve, reject) => {
     //@ts-ignore TODO: type error
-    renderComponentIsHtmlToBuffer(components[key], options, name).then((res) => {
-      if (typeof res == "boolean") {
-        reject(false);
-      } else {
-        compressImageFromBuffer(res)
-          .then((buf) => {
-            resolve(buf);
-          })
-          .catch(() => {
-            reject(false);
-          });
-      }
-    }).catch(err=>{
-      logger.warn(`[cheese]图片渲染错误：`, err)
-    });
+    renderComponentIsHtmlToBuffer(components[key], options, name)
+      .then(res => {
+        if (typeof res == 'boolean') {
+          reject(false);
+        } else {
+          compressImageFromBuffer(res)
+            .then(buf => {
+              resolve(buf);
+            })
+            .catch(() => {
+              reject(false);
+            });
+        }
+      })
+      .catch(err => {
+        logger.warn(`[cheese]图片渲染错误：`, err);
+      });
   });
 };

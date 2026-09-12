@@ -1,30 +1,30 @@
-import { Image, Text, useSend } from "alemonjs";
-import { Pictures } from "@src/image/index";
-import { pluginInfo } from "@src/package";
-import { sleep } from "@src/utils/index";
-import { readFileSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
-import Cfg from "@src/utils/config";
+import { Pictures } from '@src/image/index';
+import { pluginInfo } from '@src/package';
+import Cfg from '@src/utils/config';
+import { sleep } from '@src/utils/index';
+import { Image, Text, useSend } from 'alemonjs';
+import { readFileSync, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
 
 export default OnResponse(async (event, next) => {
-  const help = Cfg.getConfig("help");
-  const custom_reg = new RegExp(help?.custom?.reg || "^我的帮助");
+  const help = Cfg.getConfig('help');
+  const custom_reg = new RegExp(help?.custom?.reg || '^我的帮助');
 
   if (/^(\/|#)?奶酪帮助$/.test(event.MessageText)) {
     const Send = useSend(event);
-    const img = await Pictures("help", {
+    const img = await Pictures('help', {
       data: {
-        title: "奶酪帮助",
-        desc: "Cheese Menu",
+        title: '奶酪帮助',
+        desc: 'Cheese Menu',
         list: help.default,
-        logo_img: resolve(pluginInfo.PUBLIC_PATH, "cheese.png"),
+        logo_img: resolve(pluginInfo.PUBLIC_PATH, 'cheese.png'),
       },
     });
     // send
-    if (typeof img != "boolean") {
+    if (typeof img != 'boolean') {
       Send(Image(img));
     } else {
-      Send(Text("图片加载失败"));
+      Send(Text('图片加载失败'));
     }
   }
 
@@ -32,10 +32,8 @@ export default OnResponse(async (event, next) => {
     const Send = useSend(event);
     let logoImg = help?.custom?.logo_img as string;
     if (logoImg)
-      logoImg = logoImg.startsWith("http")
-        ? logoImg
-        : resolve(pluginInfo.DATA_PATH, logoImg);
-    const img = await Pictures("help", {
+      logoImg = logoImg.startsWith('http') ? logoImg : resolve(pluginInfo.DATA_PATH, logoImg);
+    const img = await Pictures('help', {
       data: {
         title: help?.custom?.title,
         desc: help?.custom?.desc,
@@ -46,33 +44,24 @@ export default OnResponse(async (event, next) => {
       },
     });
     // send
-    if (typeof img != "boolean") {
+    if (typeof img != 'boolean') {
       Send(Image(img));
     } else {
-      Send(Text("图片加载失败"));
+      Send(Text('图片加载失败'));
     }
   }
   if (/奶酪(查看|更改)帮助配置(.*)/.test(event.MessageText)) {
     // 创建一个send
     const Send = useSend(event);
-    const yamlPath = join(
-      pluginInfo.ROOT_PATH,
-      "config",
-      "config",
-      "help.yaml"
-    );
-    if (event.MessageText.includes("更改")) {
-      writeFileSync(
-        yamlPath,
-        event.MessageText.replace(/.*奶酪更改帮助配置(\+)?/, ""),
-        "utf-8"
-      );
-      Send(Text("修改成功！"));
+    const yamlPath = join(pluginInfo.ROOT_PATH, 'config', 'config', 'help.yaml');
+    if (event.MessageText.includes('更改')) {
+      writeFileSync(yamlPath, event.MessageText.replace(/.*奶酪更改帮助配置(\+)?/, ''), 'utf-8');
+      Send(Text('修改成功！'));
     } else {
-      Send(Text(readFileSync(yamlPath, "utf-8")));
+      Send(Text(readFileSync(yamlPath, 'utf-8')));
       await sleep(2000);
-      Send(Text("请发送 奶酪更改帮助配置+以上配置 进行修改~"));
+      Send(Text('请发送 奶酪更改帮助配置+以上配置 进行修改~'));
     }
   }
   next();
-}, "message.create");
+}, 'message.create');

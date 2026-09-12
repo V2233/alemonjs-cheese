@@ -1,4 +1,4 @@
-export function getRandomFaces(faceMap, numFaces:number) {
+export function getRandomFaces(faceMap, numFaces: number) {
   // 获取faceMap的键数组
   const keys = Object.keys(faceMap);
   // 创建一个新的空字典来存储随机挑选的表情
@@ -287,8 +287,8 @@ export const faceMap = {
   345: '/红包多多',
   346: '/你真棒棒',
   347: '/大展宏兔',
-  348: '/福萝卜'
-}
+  348: '/福萝卜',
+};
 
 export const pokeMap = {
   0: '[回戳]',
@@ -309,9 +309,5 @@ export const pokeMap = {
   2008: '[迎春]',
   2009: '[让你皮]',
   2010: '[音响]',
-  2011: '[宝贝球]'
-}
-
-
-
-
+  2011: '[宝贝球]',
+};

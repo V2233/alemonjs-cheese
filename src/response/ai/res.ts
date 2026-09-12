@@ -1,10 +1,11 @@
-import { Image, Text, useSend, useMention, ResultCode } from "alemonjs";
-import { Pictures } from "@src/image/index";
-import { getQRCode } from "@src/utils/qrcode";
+import { Pictures } from '@src/image/index';
+import Cfg from '@src/utils/config';
+import { getQRCode } from '@src/utils/qrcode';
+import { Image, Text, useSend, useMention, ResultCode } from 'alemonjs';
+import OpenAI from 'openai';
+
 // import { groupStore } from '@src/apps/store/res'
-import AiTool from "./utils/tool";
-import OpenAI from "openai";
-import Cfg from "@src/utils/config";
+import AiTool from './utils/tool';
 
 const groupMsgs = {};
 
@@ -28,7 +29,7 @@ const pushGroupMsgs = (group_id: string, msg, limit = 10) => {
 };
 
 const res = OnResponse(async (event, next) => {
-  const cfg = Cfg.getConfig("ai");
+  const cfg = Cfg.getConfig('ai');
   if (!cfg.is_open) return;
 
   if (!groupMsgs[event.GuildId]) {
@@ -42,35 +43,32 @@ const res = OnResponse(async (event, next) => {
 
   const prefixReg = new RegExp(cfg.prefix);
 
-  console.log("-------------" + cfg.prefix);
+  console.log('-------------' + cfg.prefix);
 
-  if (
-    (cfg.prefix && prefixReg.test(event.MessageText)) ||
-    botSelf.code === ResultCode.Ok
-  ) {
+  if ((cfg.prefix && prefixReg.test(event.MessageText)) || botSelf.code === ResultCode.Ok) {
     const Send = useSend(event);
-    Send(Text("该功能已暂停维护"));
+    Send(Text('该功能已暂停维护'));
     next();
     return;
     // TODO
     let aiTool = new AiTool(event);
     // let roleText = await aiTool.getRoleText(e.msg, groupMsgs[e.group_id].msgs)
     const openAI = new OpenAI({
-      apiKey: Cfg.getConfig("ai").api_key,
-      baseURL: "https://free.v36.cm/v1",
+      apiKey: Cfg.getConfig('ai').api_key,
+      baseURL: 'https://free.v36.cm/v1',
     });
 
     let roleText = await aiTool.getRoleText(
-      event.MessageText.replace(prefixReg, ""),
+      event.MessageText.replace(prefixReg, ''),
       groupMsgs[event.GuildId].msgs
     );
 
     const chatCompletion = await openAI.chat.completions.create({
-      messages: [{ role: "user", content: roleText }],
-      model: cfg.model || "gpt-4o-mini", // gpt-3.5-turbo
+      messages: [{ role: 'user', content: roleText }],
+      model: cfg.model || 'gpt-4o-mini', // gpt-3.5-turbo
     });
 
-    let text = chatCompletion.choices[0].message.content || "";
+    let text = chatCompletion.choices[0].message.content || '';
 
     let context = aiTool.parse(text);
     await context.send();
@@ -96,19 +94,19 @@ const res = OnResponse(async (event, next) => {
   }
 
   if (/奶酪获取openaikey$/.test(event.MessageText)) {
-    const img = await Pictures("qrcode", {
+    const img = await Pictures('qrcode', {
       data: {
-        url: await getQRCode("https://free.v36.cm/github"),
-        title: "扫码获取免费OpenaiKey",
-        desc: "需要github账户验证",
+        url: await getQRCode('https://free.v36.cm/github'),
+        title: '扫码获取免费OpenaiKey',
+        desc: '需要github账户验证',
       },
     });
     const Send = useSend(event);
 
-    if (typeof img != "boolean") {
+    if (typeof img != 'boolean') {
       Send(Image(img));
     } else {
-      Send(Text("图片加载失败"));
+      Send(Text('图片加载失败'));
     }
     next();
     return;
@@ -124,6 +122,6 @@ const res = OnResponse(async (event, next) => {
     cfg.ctx_num
   );
   next();
-}, "message.create");
+}, 'message.create');
 
-export default OnResponse([res.current], "message.create");
+export default OnResponse([res.current], 'message.create');

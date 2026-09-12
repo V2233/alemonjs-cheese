@@ -1,6 +1,6 @@
 export interface IEmoDetail {
-    url:string
-    id:number,
-    tag:string,
-    detail:string
+  url: string;
+  id: number;
+  tag: string;
+  detail: string;
 }

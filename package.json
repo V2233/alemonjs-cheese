@@ -15,7 +15,7 @@
     "bundle": "lvy build",
     "stop": "pm2 stop pm2.config.cjs",
     "delete": "pm2 delete pm2.config.cjs",
-    "format": "prettier --write ./src/**/*.{ts,tsx}",
+    "format": "oxfmt --write ./src/**/*.{ts,tsx}",
     "check-format": "git diff --exit-code"
   },
   "dependencies": {

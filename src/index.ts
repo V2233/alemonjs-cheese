@@ -1,4 +1,4 @@
-import response from "@src/router";
+import response from '@src/router';
 export default defineChildren({
   register() {
     return {
@@ -6,6 +6,6 @@ export default defineChildren({
     };
   },
   onCreated() {
-    logger.info("[cheese]Start OpenAI APP");
+    logger.info('[cheese]Start OpenAI APP');
   },
 });

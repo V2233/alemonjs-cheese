@@ -1,55 +1,55 @@
-import { Image, Text, useSend, useMention, ResultCode } from "alemonjs";
-import { Pictures } from "@src/image/index";
-import { mixMode } from "./utils/mixMode";
-import { join } from "path";
-import { pluginInfo } from "../../package";
-import { existsSync, writeFileSync, readFileSync, mkdirSync } from "fs";
-import { port, assetsPath } from "@src/utils/server";
-import { createMD5 } from "@src/utils/index";
-import { toMarkdown } from "@src/utils/marked";
-import type { IEmoDetail } from "@src/types/emotion";
+import { Pictures } from '@src/image/index';
+import type { IEmoDetail } from '@src/types/emotion';
+import { createMD5 } from '@src/utils/index';
+import { toMarkdown } from '@src/utils/marked';
+import { port, assetsPath } from '@src/utils/server';
+import { Image, Text, useSend, useMention, ResultCode } from 'alemonjs';
+import { existsSync, writeFileSync, readFileSync, mkdirSync } from 'fs';
+import { join } from 'path';
 
-const cachePath = join(assetsPath, "cache");
+import { pluginInfo } from '../../package';
+import { mixMode } from './utils/mixMode';
+
+const cachePath = join(assetsPath, 'cache');
 if (!existsSync(cachePath)) mkdirSync(cachePath, { recursive: true });
 
-const maskDataPath = join(pluginInfo.DATA_PATH, "maskDB.json");
-if (!existsSync(maskDataPath))
-  writeFileSync(maskDataPath, JSON.stringify([]), "utf-8");
+const maskDataPath = join(pluginInfo.DATA_PATH, 'maskDB.json');
+if (!existsSync(maskDataPath)) writeFileSync(maskDataPath, JSON.stringify([]), 'utf-8');
 
 let pageNo = 0;
-let curKeyword = "星星";
+let curKeyword = '星星';
 let pageSize = 15;
-let mixBlendMode = "overlay";
-let pngsList: Array<any> = JSON.parse(readFileSync(maskDataPath, "utf8"));
+let mixBlendMode = 'overlay';
+let pngsList: Array<any> = JSON.parse(readFileSync(maskDataPath, 'utf8'));
 // let cd: NodeJS.Timeout | null = null
 
 /**
  * 获取png列表
  */
-const reqPngList = async (keyword = "星星", pageNo = 0, pageSize = 10) => {
-  const url = "https://api.soutushenqi.com/api/v1/avoid_cut/list";
+const reqPngList = async (keyword = '星星', pageNo = 0, pageSize = 10) => {
+  const url = 'https://api.soutushenqi.com/api/v1/avoid_cut/list';
 
   const headers = {
-    "Content-Type": "application/x-www-form-urlencoded",
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
   };
 
   const params = new URLSearchParams({
-    product_id: "53",
-    version_code: "1353",
-    loose: "false",
-    page: "" + pageNo,
-    page_size: "" + pageSize,
+    product_id: '53',
+    version_code: '1353',
+    loose: 'false',
+    page: '' + pageNo,
+    page_size: '' + pageSize,
     search_word: keyword,
-    scene_type: "13",
-    sort_type: "-1",
-    is_large_scale: "-1",
-    sign: "C2BF293219CCE23A63E24CBFC4BCEF40",
+    scene_type: '13',
+    sort_type: '-1',
+    is_large_scale: '-1',
+    sign: 'C2BF293219CCE23A63E24CBFC4BCEF40',
   });
 
   const res = await fetch(url, {
-    method: "POST",
+    method: 'POST',
     headers: headers,
     body: params.toString(),
   });
@@ -65,21 +65,18 @@ const reqPngList = async (keyword = "星星", pageNo = 0, pageSize = 10) => {
  */
 const reqPng = async (id = 0) => {
   if (!pngsList[id]) {
-    return "";
+    return '';
   }
   const url = pngsList[id].largeUrl;
   const res2 = await fetch(url);
-  const imgData = Buffer.from(await res2.arrayBuffer()).toString("base64");
-  return "data:image/png;base64," + imgData;
+  const imgData = Buffer.from(await res2.arrayBuffer()).toString('base64');
+  return 'data:image/png;base64,' + imgData;
 };
 
 const getHybridTip = () => {
   return mixMode
-    .map(
-      (item, index) =>
-        `${index + 1}. **${item.desc}**\`\`\`${item.name}\`\`\`：${item.detail}`
-    )
-    .join("\n");
+    .map((item, index) => `${index + 1}. **${item.desc}**\`\`\`${item.name}\`\`\`：${item.detail}`)
+    .join('\n');
 };
 
 export default OnResponse(async (event, next) => {
@@ -102,9 +99,9 @@ export default OnResponse(async (event, next) => {
 
   if (/混合模式(.*)/.test(event.MessageText)) {
     if (/混合模式$/.test(event.MessageText)) {
-      const img = await Pictures("markdown", {
+      const img = await Pictures('markdown', {
         data: {
-          title: "图片合成混合模式设置",
+          title: '图片合成混合模式设置',
           html: await toMarkdown(
             `## 发送\`\`\`混合模式+序号\`\`\`更改混合模式\n>当前模式：${mixBlendMode}\n` +
               getHybridTip()
@@ -112,15 +109,15 @@ export default OnResponse(async (event, next) => {
         },
       });
 
-      if (typeof img != "boolean") {
+      if (typeof img != 'boolean') {
         Send(Image(img));
       } else {
-        Send(Text("图片加载失败"));
+        Send(Text('图片加载失败'));
       }
     } else {
-      const id = Number(event.MessageText.replace(/.*混合模式/, ""));
+      const id = Number(event.MessageText.replace(/.*混合模式/, ''));
       if (id < 1 || id > mixMode.length) {
-        Send(Text("序号不对呢~"));
+        Send(Text('序号不对呢~'));
         return;
       } else {
         mixBlendMode = mixMode[id - 1].name;
@@ -145,11 +142,11 @@ export default OnResponse(async (event, next) => {
   }
 
   if (/搜索图片(.*)/.test(event.MessageText)) {
-    curKeyword = event.MessageText.replace(/.*搜索图片/, "") ?? curKeyword;
+    curKeyword = event.MessageText.replace(/.*搜索图片/, '') ?? curKeyword;
 
     pngsList = await reqPngList(curKeyword, pageNo, pageSize);
 
-    writeFileSync(maskDataPath, JSON.stringify(pngsList), "utf-8");
+    writeFileSync(maskDataPath, JSON.stringify(pngsList), 'utf-8');
 
     const pics: IEmoDetail[] = [];
 
@@ -164,17 +161,17 @@ export default OnResponse(async (event, next) => {
       index++;
     }
 
-    const img = await Pictures("emoList", {
+    const img = await Pictures('emoList', {
       data: {
         list: pics,
         pageNo: pageNo,
       },
     });
 
-    if (typeof img != "boolean") {
+    if (typeof img != 'boolean') {
       Send(Image(img));
     } else {
-      Send(Text("图片加载失败"));
+      Send(Text('图片加载失败'));
     }
     // cd = setTimeout(()=>{
     //     cd && clearTimeout(cd)
@@ -207,30 +204,29 @@ export default OnResponse(async (event, next) => {
     const maskBuffer = Buffer.from(await res.arrayBuffer());
 
     const maskMd5 = await createMD5(maskBuffer);
-    const maskPngPath = join(cachePath, maskMd5 + ".png");
+    const maskPngPath = join(cachePath, maskMd5 + '.png');
     if (!existsSync(maskPngPath)) {
-      writeFileSync(maskPngPath, maskBuffer, "utf-8");
+      writeFileSync(maskPngPath, maskBuffer, 'utf-8');
     }
     url = `http://127.0.0.1:${port}/cache/${maskMd5}.png`;
 
-    const img = await Pictures("makeEmo", {
+    const img = await Pictures('makeEmo', {
       data: {
         originUrl:
-          (user ? user : event).UserAvatar ||
-          `https://q1.qlogo.cn/g?b=qq&s=0&nk=${event.UserId}`,
+          (user ? user : event).UserAvatar || `https://q1.qlogo.cn/g?b=qq&s=0&nk=${event.UserId}`,
         maskUrl: url,
         mixBlendMode,
       },
     });
     // send
-    if (typeof img != "boolean") {
+    if (typeof img != 'boolean') {
       Send(Image(img));
     } else {
-      Send(Text("图片加载失败"));
+      Send(Text('图片加载失败'));
     }
   }
 
   if (/^第(\d+)页$/.test(event.MessageText)) {
     pageNo = (Number((/第(\d+)页/.exec(event.MessageText) || [])[1]) || 1) - 1;
   }
-}, "message.create");
+}, 'message.create');
