@@ -12,7 +12,12 @@ export interface IGroup {
   ans: number;
   degree: number;
   cd: number;
-  replyed: boolean;
+  /**
+   * - `idle`: 没有进行中的题目（初始、超时结束、手动结束后）
+   * - `questioning`: 题目已发出，等待玩家作答
+   * - `answered`: 本题已被抢答，正在等待 interval 后发下一题
+   */
+  status: 'idle' | 'questioning' | 'answered';
   players: IGroupPlayers;
 }
 
@@ -24,16 +29,4 @@ export interface IGengItem {
   pic: string;
   title: string;
   id: number;
-}
-
-interface ITimeout {
-  id: NodeJS.Timeout;
-  ts: number;
-}
-
-export interface ICdCache {
-  [key: string]: ITimeout;
-}
-export interface ICdTip {
-  [key: string]: NodeJS.Timeout;
 }

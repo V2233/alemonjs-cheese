@@ -37,6 +37,11 @@ scheduleTask(
 );
 
 export default OnResponse(async (event, next) => {
+  if (!/^(\/|#)?(今日运势|运气|祝福|诅咒|逆天改命|刷新运势|历史运势)$/.test(event.MessageText)) {
+    next();
+    return;
+  }
+
   // 手动刷新运势定时任务（应对每日定时刷新失败问题）
   if (/^(\/|#)?刷新运势$/.test(event.MessageText) && event.IsMaster) {
     Object.keys(luckRecord).forEach(key => {
@@ -53,7 +58,7 @@ export default OnResponse(async (event, next) => {
   const botSelf = await mention.findOne({ IsBot: false });
   const atUser = botSelf.code == ResultCode.Ok ? botSelf.data : null;
 
-  const strUser = String(atUser?.UserId || event.UserId);
+  const strUser = atUser?.UserId || event.UserId;
 
   const cfg = Cfg.getConfig('theme');
 
@@ -97,33 +102,23 @@ export default OnResponse(async (event, next) => {
     if (/逆天改命/.test(event.MessageText)) {
       if (!playerObj() || playerObj().list.length == 0) {
         sendAtText('你还没看今天的运势呢，改什么命啊o(≧▽≦o)', {
-          md: fmd => fmd.addNewline(),
           btns: fbg => fbg.addRow().addButton('今日运势', '今日运势'),
         });
         return;
       }
       if (atUser) {
         sendAtText('哼~你还想帮别人改命？', {
-          md: fmd => fmd.addNewline(),
           btns: fbg => fbg.addRow().addButton('逆天改命', '逆天改命'),
         });
         return;
       }
       if (fortuneList[getTodayLuck().id].stars >= 7) {
-        if (playerObj().isKing) {
-          sendAtText(
-            '不用改命啦，至尊无敌运气王，发起【诅咒@群友】或【祝福@群友】展示您的运势权能吧！\n',
-            {
-              md: fmd =>
-                fmd
-                  .addButton('祝福@群友', { data: '祝福' })
-                  .addText('  ')
-                  .addButton('诅咒@群友', { data: '诅咒' }),
-            }
-          );
-        } else {
-          sendAtText('不用改命啦，至尊无敌运气王，您已经施展了足以威慑众生的运势权能！');
-        }
+        sendAtText(
+          '不用改命啦，至尊无敌运气王，发起【祝福@群友】或【诅咒@群友】展示您的运势权能吧！\n',
+          {
+            btns: fbg => fbg.addRow().addButton('祝福@', '祝福').addButton('诅咒@', '诅咒'),
+          }
+        );
         return;
       }
       if (luckRecord[strUser].debris < 7) {
@@ -144,27 +139,25 @@ export default OnResponse(async (event, next) => {
     let addDebris = 0;
 
     if (/诅咒/.test(event.MessageText)) {
-      if (!luckRecord[event.UserId].isKing) {
-        sendAtText(
-          '您没有干扰别人运势的权能或者您已经改变过别人的命运了，成为至尊无敌运气王才可以获得一次干涉他人命运的权利哦~'
-        );
+      if (!luckRecord[event.UserId].curseNums) {
+        sendAtText('你还剩余诅咒次数 0 ，成为 至尊无敌非酋王 才可以获得诅咒他人的机会哦~');
         return;
       }
       if (!atUser) {
         sendAtText('你要诅咒谁啊笨蛋！', {
-          btns: fbg => fbg.addRow().addButton('诅咒', '诅咒').addButton('祝福', '祝福'),
+          btns: fbg => fbg.addRow().addButton('诅咒@', '诅咒').addButton('祝福@', '祝福'),
         });
         return;
       }
       if (atUser.UserId == event.UserId) {
         sendAtText('您确定要诅咒自己吗？', {
-          btns: fbg => fbg.addRow().addButton('诅咒', '诅咒').addButton('祝福', '祝福'),
+          btns: fbg => fbg.addRow().addButton('诅咒@', '诅咒').addButton('祝福@', '祝福'),
         });
         return;
       }
       if (!luckRecord[atUser.UserId] || !luckRecord[atUser.UserId].isTested) {
         sendAtText('对方今天没测过运势，您诅咒不了捏~', {
-          btns: fbg => fbg.addRow().addButton('诅咒', '诅咒').addButton('祝福', '祝福'),
+          btns: fbg => fbg.addRow().addButton('诅咒@', '诅咒').addButton('祝福@', '祝福'),
         });
         return;
       }
@@ -175,31 +168,29 @@ export default OnResponse(async (event, next) => {
       // luckRecord[atUser.UserId].luckId = luckList[luckId].id
       setTodayLuck(atUser.UserId, 'id', luckList[luckId].id);
       luckId = luckList[luckId].id;
-      delete luckRecord[event.UserId].isKing;
+      luckRecord[atUser.UserId].curseNums! > 0 && luckRecord[atUser.UserId].curseNums!--;
     }
 
     if (/祝福/.test(event.MessageText)) {
-      if (!luckRecord[event.UserId].isKing) {
-        sendAtText(
-          '您没有干扰别人运势的权能或者您已经改变过别人的命运了，成为至尊无敌运气王才可以获得一次干涉他人命运的权利哦~'
-        );
+      if (!luckRecord[event.UserId].blessNums) {
+        sendAtText('你还剩余祝福次数 0 ，成为 至尊无敌运气王 才可以获得祝福他人的机会哦~');
         return;
       }
       if (!atUser) {
         sendAtText('你要祝福谁啊笨蛋！', {
-          btns: fbg => fbg.addRow().addButton('诅咒', '诅咒').addButton('祝福', '祝福'),
+          btns: fbg => fbg.addRow().addButton('诅咒@', '诅咒').addButton('祝福@', '祝福'),
         });
         return;
       }
       if (atUser.UserId == event.UserId) {
-        sendAtText('不用祝福自己哦~你已经是运气王了！', {
-          btns: fbg => fbg.addRow().addButton('诅咒', '诅咒').addButton('祝福', '祝福'),
+        sendAtText('不能祝福自己哦~', {
+          btns: fbg => fbg.addRow().addButton('诅咒@', '诅咒').addButton('祝福@', '祝福'),
         });
         return;
       }
       if (!luckRecord[atUser.UserId] || !luckRecord[atUser.UserId].isTested) {
         sendAtText('对方今天没测过运势，您祝福不了捏~', {
-          btns: fbg => fbg.addRow().addButton('诅咒', '诅咒').addButton('祝福', '祝福'),
+          btns: fbg => fbg.addRow().addButton('诅咒@', '诅咒').addButton('祝福@', '祝福'),
         });
         return;
       }
@@ -209,16 +200,18 @@ export default OnResponse(async (event, next) => {
       // luckRecord[atUser.UserId].luckId = luckList[luckId].id
       setTodayLuck(atUser.UserId, 'id', luckList[luckId].id);
       luckId = luckList[luckId].id;
-      delete luckRecord[atUser.UserId].isKing;
+      luckRecord[atUser.UserId].blessNums! > 0 && luckRecord[atUser.UserId].blessNums!--;
     }
 
     if (!playerObj().isTested || /逆天改命/.test(event.MessageText)) {
       luckId = Math.floor(Math.random() * luckList.length);
       if (luckList[luckId].stars == 0) {
         addDebris = 0;
+        luckRecord[strUser].curseNums = 1;
       } else if (luckList[luckId].stars == 7) {
         addDebris = 0;
-        luckRecord[strUser].isKing = true;
+        luckRecord[strUser].blessNums = 1;
+        luckRecord[strUser].curseNums = 1;
       } else {
         addDebris = 7 - luckList[luckId].stars;
       }
@@ -271,20 +264,24 @@ export default OnResponse(async (event, next) => {
     };
 
     let mixText = ``;
-    // let nick = atUser ? (await atUser.UserAvatar?.toURL()) : (await event.UserAvatar?.toURL())
     if (starCount == 7) {
-      if (playerObj().isKing) {
-        mixText = `恭喜你成为了至尊无敌运气王！将笼罩在命运之神欢愉的曙光下！你有一次决定别人命途的权利，请使用【诅咒@群友】或【祝福@群友】施展您的运势权能吧！`;
+      const { blessNums, curseNums } = playerObj();
+      if ((blessNums && blessNums > 0) || (curseNums && curseNums > 0)) {
+        mixText = `恭喜你成为了至尊无敌运气王！将笼罩在命运之神欢愉的曙光下！\n你有 ${blessNums || 0} 次祝福别人和 ${curseNums || 0} 次诅咒别人命途的权利，请使用【祝福@群友】或【诅咒@群友】施展您的运势权能吧！`;
       } else {
         mixText = `恭喜你成为了至尊无敌运气王，您已经施展了足以威慑众生的运势权能！`;
       }
     } else if (starCount == 0) {
-      mixText = `嘤嘤嘤~你是大凶捏，命运之神没有眷顾你，但还是给了你一次诅咒别人的机会，发送【诅咒@群友】寻找甘愿共苦之人吧~`;
-      luckRecord[strUser].isKing = true;
+      const curseNums = playerObj().curseNums;
+      if (curseNums && curseNums > 0) {
+        mixText = `嘤嘤嘤~你是大凶捏，命运之神没有眷顾你，但是这种好运气怎么能独享！\n你有 ${curseNums} 次诅咒别人的机会，发送【诅咒@群友】照顾你的好友吧~`;
+      } else {
+        `嘤嘤嘤~你是大凶捏，命运之神没有眷顾你~`;
+      }
     } else {
       if (playerObj().isTested) {
         if (/逆天改命/.test(event.MessageText)) {
-          mixText = `恭喜改命成功，消耗了7个命运碎片，并获得了 ${addDebris} 个碎片！注意: 改命仅能保证比上一次的运势高，如果上一次运势为吉则改命后必成运气王！据说运气王拥有操纵他人运势的能力...`;
+          mixText = `恭喜改命成功，消耗了7个命运碎片，并获得了 ${addDebris} 个补充碎片！\n注意: 改命仅能保证比上一次的运势高，如果上一次运势为吉则改命后必成运气王！\n据说运气王拥有操纵他人运势的能力...`;
           // 猜惊喜
           await sendAtImage(
             readFileSync(
@@ -320,7 +317,7 @@ export default OnResponse(async (event, next) => {
     const data = {
       ...fortuneData,
       luckData: luckyData,
-      tip: `${mixText}当前剩余：${luckRecord[strUser].debris}个命运碎片`,
+      tip: `${mixText}当前剩余：${luckRecord[strUser].debris} 个命运碎片`,
     };
 
     const img = await Pictures('todayLuck', {
@@ -331,7 +328,13 @@ export default OnResponse(async (event, next) => {
       // SendOnce(fmt => fmt.addMention().addImage(img))
       await sendAtImage(img, {
         md: fmd => fmd.addText(data.tip),
-        btns: fbg => fbg.addRow().addButton('历史运势', '历史运势'),
+        btns: fbg =>
+          fbg
+            .addRow()
+            .addButton('历史运势', '历史运势')
+            .addRow()
+            .addButton('诅咒@', '诅咒')
+            .addButton('祝福@', '祝福'),
       });
     } else {
       sendAtText('图片加载失败');

@@ -4,8 +4,7 @@
 import { sendAtImage, sendAtText } from '@src/hooks/send';
 import { Pictures } from '@src/image/index';
 import { groupStore } from '@src/response/store';
-import type { ICache, ICdCache, ICdTip, IGengItem, IGroup } from '@src/types/meme';
-import { sleep } from '@src/utils';
+import type { ICache, IGengItem, IGroup } from '@src/types/meme';
 import Cfg from '@src/utils/config';
 import { Image, Text, useSend } from 'alemonjs';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
@@ -21,13 +20,30 @@ let gengList: IGengItem[] =
 let cache: ICache = {};
 let page = 1;
 
-// 超时计时器缓存
-let cdCache: ICdCache = {};
-
-// 是否需要提示超时
-let cdTip: ICdTip = {};
+// 超时计时器（题目发出后 cd 秒内无人抢答则超时）
+let timeoutCache: { [key: string]: NodeJS.Timeout } = {};
+// 冷却计时器（抢答后 interval 秒发下一题）
+let intervalCache: { [key: string]: NodeJS.Timeout } = {};
+// 本题发出时间戳，用于计算剩余秒数
+let questionTs: { [key: string]: number } = {};
 
 let sliceNum = 25;
+
+//当前群难度等级
+const qsDegree = (degree: number) => {
+  switch (degree) {
+    case 4:
+      return '简单';
+    case 6:
+      return '一般';
+    case 8:
+      return '困难';
+    case 12:
+      return '地狱';
+    default:
+      return '一般';
+  }
+};
 
 export default OnResponse(async (event, next) => {
   // 是否在群
@@ -37,50 +53,40 @@ export default OnResponse(async (event, next) => {
     return;
   }
 
-  //当前群难度等级
-  const qsDegree = () => {
-    switch (cache[event.GuildId].degree) {
-      case 4:
-        return '简单';
-      case 6:
-        return '一般';
-      case 8:
-        return '困难';
-      case 12:
-        return '地狱';
-      default:
-        return '一般';
-    }
-  };
-
-  // 是否提示过cd超时
-  if (cdTip[event.GuildId] && !cdCache[event.GuildId]) {
-    delete cdTip[event.GuildId];
-    sendAtText(
-      `已超时结束，请重新发起【看图识梗】！\npass: 当前设置为 ${cache[event.GuildId].cd} 秒超时结束！\n`,
-      {
-        md: fmd =>
-          fmd
-            .addText(`当前难度等级${qsDegree()}，发送\n【识梗难度设置 `)
-            .addButton('简单', { data: '识梗难度设置简单' })
-            .addText(' | ')
-            .addButton('一般', { data: '识梗难度设置一般' })
-            .addText(' | ')
-            .addButton('困难', { data: '识梗难度设置困难' })
-            .addText(' | ')
-            .addButton('地狱', { data: '识梗难度设置地狱' })
-            .addText(`】(答对分别加 1 | 2 | 3 | 4 分)`),
-        btns: fbg =>
-          fbg.addRow().addButton('看图识梗', '看图识梗').addButton('懂王排行', '懂王排行'),
-      }
-    );
-    next();
-    return;
-  }
   const cfg = Cfg.getConfig('meme');
+  const memeDataPath = join(memeDataDir, event.GuildId + '.json');
+
+  //初始化群对象
+  if (!cache[event.GuildId]) {
+    if (existsSync(memeDataPath)) {
+      const raw = JSON.parse(readFileSync(memeDataPath, 'utf8'));
+      // 兼容旧存档：replyed -> status
+      if (raw.status === undefined) {
+        raw.status = raw.replyed ? 'answered' : 'idle';
+        delete raw.replyed;
+      }
+      // 进程重启后旧题已失效，重置为 idle
+      if (raw.status === 'questioning' || raw.status === 'answered') {
+        raw.status = 'idle';
+      }
+      cache[event.GuildId] = raw;
+    } else {
+      cache[event.GuildId] = {
+        id: 0,
+        ans: 0,
+        degree: 6,
+        cd: cfg.timeout,
+        status: 'idle',
+        players: {},
+      };
+    }
+  }
+
+  const inGame =
+    cache[event.GuildId].status === 'questioning' || cache[event.GuildId].status === 'answered';
 
   // 处理
-  if (/看图识梗|结束|懂王排行|识梗难度设置(.*)/.test(event.MessageText) || cdCache[event.GuildId]) {
+  if (/看图识梗|结束|懂王排行|识梗难度设置(.*)/.test(event.MessageText) || inGame) {
     const Send = useSend(event);
 
     //获取群对象
@@ -123,12 +129,10 @@ export default OnResponse(async (event, next) => {
 
       let mixedAns = getRandomElements(gengList, groupData().degree - 1);
       mixedAns = shuffle([...mixedAns, gengList[randomIndex]]);
-      // let mixedText = ''
       mixedAns.forEach((item, index: number) => {
         if (item.title == gengList[randomIndex].title) {
           setGroupData('ans', index);
         }
-        // mixedText += `【${index}】${item.title}\n`
       });
       return {
         mixedAns,
@@ -152,26 +156,23 @@ export default OnResponse(async (event, next) => {
       }
     };
 
-    const memeDataPath = join(memeDataDir, event.GuildId + '.json');
-
-    //初始化群对象
-    if (!cache[event.GuildId]) {
-      if (existsSync(memeDataPath))
-        cache[event.GuildId] = JSON.parse(readFileSync(memeDataPath, 'utf8'));
-      else
-        cache[event.GuildId] = {
-          id: 0,
-          ans: 0,
-          degree: 6,
-          cd: cfg.timeout,
-          replyed: false,
-          players: {},
-        };
-    }
+    // 清理该群所有计时器
+    const clearTimers = () => {
+      if (timeoutCache[event.GuildId]) {
+        clearTimeout(timeoutCache[event.GuildId]);
+        delete timeoutCache[event.GuildId];
+      }
+      if (intervalCache[event.GuildId]) {
+        clearTimeout(intervalCache[event.GuildId]);
+        delete intervalCache[event.GuildId];
+      }
+    };
 
     // 发起看图识梗
     const sendQs = async () => {
-      setGroupData('replyed', false);
+      setGroupData('status', 'questioning');
+      questionTs[event.GuildId] = Date.now();
+
       let question = getQs();
 
       const data = {
@@ -208,20 +209,35 @@ export default OnResponse(async (event, next) => {
       }
 
       // 清理旧计时器
-      if (cdCache[event.GuildId]) clearTimeout(cdCache[event.GuildId].id);
-      if (cdTip[event.GuildId]) {
-        clearTimeout(cdTip[event.GuildId]);
-        delete cdTip[event.GuildId];
-      }
-      cdCache[event.GuildId] = {
-        ts: new Date().getTime(),
-        id: setTimeout(() => {
-          delete cdCache[event.GuildId]; //此群不在回复时间内
-          cdTip[event.GuildId] = setTimeout(() => {
-            if (cdTip[event.GuildId]) delete cdTip[event.GuildId];
-          }, 30 * 1000);
-        }, groupData().cd * 1000),
-      };
+      clearTimers();
+
+      // 启动超时计时器
+      timeoutCache[event.GuildId] = setTimeout(() => {
+        delete timeoutCache[event.GuildId];
+        // 只有还在等待作答才算超时
+        if (cache[event.GuildId]?.status !== 'questioning') return;
+
+        setGroupData('status', 'idle');
+        writeFileSync(memeDataPath, JSON.stringify(groupData()), 'utf-8');
+
+        // 直接发超时提示
+        sendAtText(`已超时结束，请重新发起【看图识梗】！\n`, {
+          md: fmd =>
+            fmd
+              .addText(`当前难度等级${qsDegree(cache[event.GuildId].degree)}\n`)
+              .addButton('简单', { data: '识梗难度设置简单' })
+              .addText(' | ')
+              .addButton('一般', { data: '识梗难度设置一般' })
+              .addText(' | ')
+              .addButton('困难', { data: '识梗难度设置困难' })
+              .addText(' | ')
+              .addButton('地狱', { data: '识梗难度设置地狱' })
+              .addNewline()
+              .addText(`(答对分别加 1 | 2 | 3 | 4 分)`),
+          btns: fbg =>
+            fbg.addRow().addButton('看图识梗', '看图识梗').addButton('懂王排行', '懂王排行'),
+        });
+      }, groupData().cd * 1000);
     };
 
     if (/看图识梗/.test(event.MessageText)) {
@@ -243,11 +259,15 @@ export default OnResponse(async (event, next) => {
           };
         })
       );
-      page = Number(event.MessageText.replace(/.*懂王排行/, '') || '0');
-      if (rankList.length > sliceNum) {
-        pageSum = Math.ceil(rankList.length / sliceNum);
+
+      pageSum = Math.ceil(rankList.length / sliceNum);
+
+      const pageMatch = event.MessageText.match(/懂王排行\s*(\d+)/);
+
+      if (pageMatch) {
+        page = Number(pageMatch[1] || 1);
         if (page > pageSum) {
-          await Send(Text(`超过页数啦，当前共${groupData().players.length}个玩家哦~`));
+          await Send(Text(`超过页数啦，当前共 ${pageSum} 页哦~`));
           return;
         }
       }
@@ -302,22 +322,19 @@ export default OnResponse(async (event, next) => {
           setGroupData('degree', 6);
       }
 
-      writeFileSync(memeDataPath, JSON.stringify(groupData), 'utf-8');
+      writeFileSync(memeDataPath, JSON.stringify(groupData()), 'utf-8');
       sendAtText('已将识梗难度设置为 ' + level);
       return;
     }
 
     //回答优先级最低
-    if (cdCache[event.GuildId]) {
+    if (inGame) {
+      // 结束
       if (/结束/.test(event.MessageText)) {
-        clearTimeout(cdCache[event.GuildId]?.id);
-        delete cdCache[event.GuildId];
+        clearTimers();
+        setGroupData('status', 'idle');
+        writeFileSync(memeDataPath, JSON.stringify(groupData()), 'utf-8');
         sendAtText('已结束本次竞答！');
-        return;
-      }
-
-      if (groupData().replyed) {
-        sendAtText('已经被抢答了哦，请等待下一题生成~');
         return;
       }
 
@@ -328,29 +345,52 @@ export default OnResponse(async (event, next) => {
         };
       }
       let playerAns = event.MessageText;
-
       let ansCount = groupData().degree;
 
       // 检测回答是否有效
-      let match = playerAns.match(/\d+/);
-      const now = new Date().getTime();
-      const leftCD = Math.ceil(groupData().cd - (now - cdCache[event.GuildId]?.ts) / 1000);
-      const illegalTip = `回答无效哦~请回复答案对应序号！\n发送【结束】可取消本次答题~\npass: 将在 ${leftCD} 秒后自动结束！`;
+      let match = playerAns.match(/^\d+$/);
+      let answerNumber = -1;
+      let validAnswer = false;
       if (match) {
-        let answerNumber = parseInt(match[0], 10);
-        if (answerNumber < 0 || answerNumber >= ansCount) {
-          sendAtText(illegalTip);
-          return;
+        answerNumber = parseInt(match[0], 10);
+        if (answerNumber >= 0 && answerNumber < ansCount) {
+          validAnswer = true;
         }
-      } else {
-        sendAtText(illegalTip);
+      }
+
+      // 非法答案：如果在 questioning 阶段提示格式/超时，否则统一提示被抢答
+      if (!validAnswer) {
+        if (groupData().status === 'questioning') {
+          const now = Date.now();
+          const leftCD = Math.ceil(groupData().cd - (now - questionTs[event.GuildId]) / 1000);
+          const illegalTip = `回答无效哦~请回复答案对应序号！\n发送【结束】可取消本次答题~\npass: 将在 ${leftCD} 秒后自动结束！`;
+          sendAtText(illegalTip);
+        } else {
+          sendAtText('已经被抢答了哦，请等待下一题生成~');
+        }
         return;
       }
 
-      if (String(groupData().ans) == playerAns) {
+      // 合法答案，但已经被抢答
+      if (groupData().status === 'answered') {
+        sendAtText('已经被抢答了哦，请等待下一题生成~');
+        return;
+      }
+
+      // 到这里说明是第一个合法答案，开始抢答
+      setGroupData('status', 'answered');
+
+      // 立刻清掉超时计时器
+      if (timeoutCache[event.GuildId]) {
+        clearTimeout(timeoutCache[event.GuildId]);
+        delete timeoutCache[event.GuildId];
+      }
+
+      // 判定对错
+      if (String(groupData().ans) == String(answerNumber)) {
         setScore(difScore());
 
-        const rightTip = `恭喜答对！获得【${difScore()}】分奖励！\n您当前分数为：${userData().score}!\n`;
+        const rightTip = `恭喜答对！获得【${difScore()}】分奖励！\n您当前分数为：${userData().score} !\n`;
 
         if (event.Platform == 'qq-bot') {
           sendAtText(rightTip, {
@@ -372,7 +412,7 @@ export default OnResponse(async (event, next) => {
           });
         }
       } else {
-        const errorTip = `不对呢~正确答案是\n【${groupData().ans}】(${gengList[groupData().id]?.title})!\n恭喜错失 ${difScore()} 分奖励！\n嘤嘤嘤~您当前分数为：${userData().score}\n`;
+        const errorTip = `不对呢~正确答案是\n【${groupData().ans}】(${gengList[groupData().id]?.title})!\n恭喜错失 ${difScore()} 分奖励！\n嘤嘤嘤~您当前分数为：${userData().score} \n`;
         if (event.Platform == 'qq-bot') {
           sendAtText(errorTip, {
             md: fmd => fmd.addText(cfg.interval + ' 秒后将自动发送下一题...'),
@@ -393,11 +433,19 @@ export default OnResponse(async (event, next) => {
           });
         }
       }
-      setGroupData('replyed', true); // 下一题
 
       writeFileSync(memeDataPath, JSON.stringify(groupData()), 'utf-8');
-      await sleep(cfg.interval * 1000);
-      sendQs();
+
+      // 启动冷却计时器，interval 后发下一题
+      if (intervalCache[event.GuildId]) {
+        clearTimeout(intervalCache[event.GuildId]);
+      }
+      intervalCache[event.GuildId] = setTimeout(() => {
+        delete intervalCache[event.GuildId];
+        // 如果已经被手动结束，就不发下一题
+        if (cache[event.GuildId]?.status !== 'answered') return;
+        sendQs();
+      }, cfg.interval * 1000);
 
       return;
     }

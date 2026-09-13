@@ -7,7 +7,8 @@ export interface IUserData {
   list: IUserLuckHistory[];
   debris: number;
   isTested?: boolean;
-  isKing?: boolean;
+  curseNums?: number;
+  blessNums?: number;
 }
 
 export interface ILuckRecord {

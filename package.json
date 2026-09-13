@@ -1,6 +1,6 @@
 {
   "name": "alemonjs-cheese",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "alemonjs插件",
   "author": "smallv",
   "main": "lib/index.js",
@@ -40,10 +40,6 @@
     "text-to-svg": "^3.1.5"
   },
   "devDependencies": {
-    "@alemonjs/gui": "^2.1.0-alpha.5",
-    "@alemonjs/kook": "^2.1.13",
-    "@alemonjs/onebot": "2.1.21",
-    "@alemonjs/qq": "0.3.5",
     "@alemonjs/qq-bot": "^2.1.35",
     "@types/express": "^5.0.6",
     "@types/node": "^24",

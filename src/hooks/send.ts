@@ -39,17 +39,14 @@ export const sendAtText = (
   return SendOnce((fmt, e) => {
     if (e.current.Platform == 'qq-bot') {
       const md = Format.createMarkdown().addMention(e.current.UserId).addNewline().addText(text);
-      if (options) {
-        if (options.md) {
-          options.md(md);
-          fmt.addMarkdown(md);
-        }
-        if (options.btns) {
-          const btns = Format.createButtonGroup();
-          fmt.addButtonGroup(options.btns(btns));
-        }
+      if (options && options.md) {
+        options.md(md);
       }
-      if (fmt.value.length == 0) fmt.addMarkdown(md);
+      fmt.addMarkdown(md);
+      if (options && options.btns) {
+        const btns = Format.createButtonGroup();
+        fmt.addButtonGroup(options.btns(btns));
+      }
       return fmt;
     } else {
       return fmt
@@ -73,10 +70,12 @@ export const sendAtImage = (
         await msg.send({ format: Fmt.create().addImage(img) });
         if (options) {
           const format = Fmt.create();
+          // 确保有md
+          const md = Fmt.createMarkdown().addMention(e.current.UserId).addNewline();
           if (options.md) {
-            const md = Fmt.createMarkdown().addMention(e.current.UserId).addNewline();
-            format.addMarkdown(options.md(md));
+            options.md(md);
           }
+          format.addMarkdown(md);
           if (options.btns) {
             const btns = Format.createButtonGroup();
             format.addButtonGroup(options.btns(btns));

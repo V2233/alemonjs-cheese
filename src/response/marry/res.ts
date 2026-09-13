@@ -72,12 +72,12 @@ export default OnResponse(async (event, next) => {
   let tips = `\n-------------------------\n您还可以发送【娶群友】【抢群友@】【强娶@】【我对象呢】【闹离婚】【亲密排行】【老婆亲亲】【老婆羞羞】【老婆做饭】【老婆打你】【老婆逛街】`;
 
   if (/亲密排行(.*)/.test(event.MessageText)) {
-    let pageSum = 0;
-    if (ren.length > sliceNum) {
-      pageSum = Math.ceil(ren.length / sliceNum);
-      page = Number(event.MessageText.replace(/.*亲密排行/, '')) || 1;
+    let pageSum = Math.ceil(ren.length / sliceNum);
+    const pageMatch = event.MessageText.match(/.*亲密排行\s*(\d+)/);
+    if (pageMatch) {
+      page = Number(pageMatch[1] || 1);
       if (page > pageSum) {
-        sendAtText(`超过页数啦，当前共${ren.length}对情侣哦~`, { md: withBaseMdTip });
+        sendAtText(`超过页数啦，当前共 ${pageSum} 页哦~`, { md: withBaseMdTip });
         return;
       }
     }
