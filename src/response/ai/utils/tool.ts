@@ -1,5 +1,5 @@
 import { Pictures } from '@src/image/index';
-import { groupStore } from '@src/response/store';
+import { useEventStore } from '@src/store';
 import Cfg from '@src/utils/config';
 import { requestBuffer } from '@src/utils/index';
 import { toMarkdown, toMermaid } from '@src/utils/marked';
@@ -79,7 +79,8 @@ export default class AiTool {
 
   /** 获取文本中可能出现的成员字典 */
   async getMemberMapFromMsg() {
-    let groupMemberMap = (await groupStore.getGroup(this.e.GuildId, this.e.Platform))?.group_map;
+    const store = useEventStore(this.e);
+    let groupMemberMap = (await store.getGroup())?.members;
     if (!groupMemberMap) return undefined;
     let memberMap = {};
     let msgSet = new Set(this.e.MessageText.split(''));

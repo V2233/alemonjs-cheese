@@ -1,19 +1,27 @@
 export default class LuckHandler {
-  private starCount: number = 0;
-  constructor(private strUser: string) {
-    this.starCount = 0;
-    this.strUser = strUser;
+  static luckyStar(starCount: number) {
+    let luckyStr = '';
+    for (let i = 1; i <= 7; i++) {
+      if (i <= starCount) {
+        luckyStr += '★';
+      } else {
+        luckyStr += '✰';
+      }
+    }
+    return luckyStr;
   }
 
-  playerObj(luckRecord) {
-    return luckRecord[this.strUser];
+  static starsColor(starCount: number) {
+    if (starCount <= 1) {
+      return 'red';
+    } else if (starCount <= 4) {
+      return 'orange';
+    } else {
+      return 'green';
+    }
   }
 
-  getTodayLuck(luckRecord) {
-    return luckRecord[this.strUser].list[luckRecord[this.strUser].list.length - 1];
-  }
-
-  luckySummary(starCount: number, lots) {
+  static luckySummary(starCount: number, lots) {
     if (starCount <= 1) {
       let xiong = lots.filter(item => item.fortuneSummary == '凶');
       let randomNum = Math.floor(Math.random() * xiong.length);
@@ -37,25 +45,27 @@ export default class LuckHandler {
     }
   }
 
+  constructor(private strUser: string) {
+    this.strUser = strUser;
+  }
+
+  playerObj(luckRecord) {
+    return luckRecord[this.strUser];
+  }
+
+  getTodayLuck(luckRecord) {
+    return luckRecord[this.strUser].list[luckRecord[this.strUser].list.length - 1];
+  }
+
+  luckySummary(starCount: number, lots) {
+    return LuckHandler.luckySummary(starCount, lots);
+  }
+
   starsColor(starCount: number) {
-    if (starCount <= 1) {
-      return 'red';
-    } else if (starCount <= 4) {
-      return 'orange';
-    } else {
-      return 'green';
-    }
+    return LuckHandler.starsColor(starCount);
   }
 
   luckyStar(starCount: number) {
-    let luckyStr = '';
-    for (let i = 1; i <= 7; i++) {
-      if (i <= starCount) {
-        luckyStr += '★';
-      } else {
-        luckyStr += '✰';
-      }
-    }
-    return luckyStr;
+    return LuckHandler.luckyStar(starCount);
   }
 }

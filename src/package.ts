@@ -1,5 +1,5 @@
-import { readFileSync, existsSync, mkdirSync } from 'fs';
-import { join, basename } from 'path';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { basename, join } from 'path';
 import { fileURLToPath } from 'url';
 
 /** 获取工作目录 */
@@ -44,7 +44,7 @@ const pluginPackageObj = JSON.parse(
 ) as pluginType;
 
 // data输出目录
-const DATA_PATH = join(WORK_PATH, 'data', '@cheese');
+const DATA_PATH = join(WORK_PATH, '.data', 'alemonjs-cheese');
 
 // 检查数据目录
 if (!existsSync(DATA_PATH)) mkdirSync(DATA_PATH, { recursive: true });

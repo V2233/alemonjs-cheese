@@ -1,0 +1,17 @@
+{
+  "id": "my-status",
+  "name": "系统状态",
+  "version": "1.0.0",
+  "runtime": "node",
+  "entry": {
+    "darwin-arm64": "runner/main.mjs",
+    "linux-amd64": "runner/main.mjs",
+    "windows-amd64": "runner/main.mjs"
+  },
+  "web": { "root": "web" },
+  "navigation": {
+    "label": "系统状态",
+    "icon": "activity",
+    "order": 10
+  }
+}

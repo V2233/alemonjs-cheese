@@ -39,6 +39,7 @@ export const sendAtText = (
   return SendOnce((fmt, e) => {
     if (e.current.Platform == 'qq-bot') {
       const md = Format.createMarkdown().addMention(e.current.UserId).addNewline().addText(text);
+
       if (options && options.md) {
         options.md(md);
       }

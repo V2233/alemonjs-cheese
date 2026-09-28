@@ -1,17 +1,26 @@
 import css_output from '@src/asstes/main.css';
-import css_marry from '@src/asstes/marry/marry.css';
+import css_meme from '@src/asstes/meme/meme.css';
 import { pluginInfo } from '@src/package';
-import type { IMarriageDisplay } from '@src/response/marry/types';
 import React from 'react';
 
 import { Container, DataBox, HeaderBox, Template } from '../common';
 
+interface IPlayerData {
+  avatar: string;
+  playerId: string;
+  nick: string;
+  debris: number,
+  isTested: boolean,
+  luckColor: string
+  luckyStar:string
+}
+
 interface IData {
-  list: IMarriageDisplay[];
-  loverSum: number;
+  list: IPlayerData[];
   currentUserId: number;
   currentPage: number;
   sliceNum: number;
+  playerSum: number;
 }
 
 interface Props {
@@ -21,11 +30,11 @@ interface Props {
 
 export default function App({ data, theme }: Props) {
   return (
-    <Template styleSheet={[css_output, css_marry]} theme={theme}>
+    <Template styleSheet={[css_output, css_meme]} theme={theme}>
       <Container style={{ color: 'white', boxShadow: '0 5px 10px 0 rgb(255 255 255 / 20%)' }}>
         <HeaderBox
-          title="恩爱排行榜"
-          description={`Gay, you're so appealing！ 当前共${data.loverSum}对情侣脱单~`}
+          title="运势财富榜"
+          description={`Fortune ranking！（仅统计本群内排行）`}
           style={{
             background: 'rgba(0, 0, 0, 0)',
             boxShadow: '0 5px 10px 0 rgb(255 255 255 / 20%)',
@@ -40,7 +49,7 @@ export default function App({ data, theme }: Props) {
               return (
                 <div
                   className="lb"
-                  key={l.spouseA}
+                  key={l.playerId}
                   style={
                     data.currentUserId == i ? { backgroundColor: 'rgba(67, 243, 249, 0.3)' } : {}
                   }
@@ -55,22 +64,15 @@ export default function App({ data, theme }: Props) {
                     <img className="medal" src={`${pluginInfo.PUBLIC_PATH}/apps/medal/铜牌.png`} />
                   )}
 
-                  {curUserId > 3 ? `${curUserId}.` : ''}
-                  {l.nickA || '？'}
-                  <span className="text-lg">♡(</span>
+                  {curUserId > 3 ? `${curUserId}.${l.nick}` : l.nick}
                   <img
-                    src={l.avatarA ?? `http://q2.qlogo.cn/headimg_dl?dst_uin=${l.spouseA}&spec=5`}
+                    className="ml-1"
+                    src={l.avatar ? l.avatar : `https://q1.qlogo.cn/g?b=qq&s=0&nk=${l.playerId}`}
                   />
-                  <span className="text-lg">)人(</span>
-                  <img
-                    src={
-                      l.avatarB ?? `http://q2.qlogo.cn/headimg_dl?dst_uin=${l.spouseB}&spec=5`
-                    }
-                  />
-                  <span className="text-lg">)♡</span>
-                  {l.nickB || '？'}
-
-                  <span className="favor ml-auto">亲密值：{l.favor}</span>
+                  {l.isTested && <span className="text-2xl" style={{ color: l.luckColor }}>
+                    {l.luckyStar}
+                  </span>}
+                  <span className="favor ml-auto">碎片：{l.debris}</span>
                 </div>
               );
             })}
@@ -80,3 +82,5 @@ export default function App({ data, theme }: Props) {
     </Template>
   );
 }
+
+

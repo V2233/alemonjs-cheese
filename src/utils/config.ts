@@ -4,11 +4,10 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from '
 import { join } from 'node:path';
 import YAML from 'yaml';
 
-import { pluginInfo, botInfo } from '../package';
+import { pluginInfo } from '../package';
 import yamlHandler from './yamlHandler';
 
-const { ROOT_PATH } = pluginInfo;
-const { WORK_PATH } = botInfo;
+const { ROOT_PATH, DATA_PATH } = pluginInfo;
 
 /**
  * ********
@@ -16,6 +15,8 @@ const { WORK_PATH } = botInfo;
  * ********
  */
 class Cfg {
+  defConfigDir = join(ROOT_PATH, 'config', 'default_config');
+  userConfigDir = join(DATA_PATH, 'config');
   /**
    *
    */
@@ -27,8 +28,8 @@ class Cfg {
   watcher = { config: {}, defSet: {} };
 
   constructor() {
+    if (!existsSync(this.userConfigDir)) mkdirSync(this.userConfigDir, { recursive: true });
     this.mergeYamlFile();
-    // console.log(this.config)
   }
 
   /**
@@ -221,15 +222,6 @@ class Cfg {
   }
 
   /**
-   * 得到默认配置
-   * @param name 配置文件名称
-   * @returns
-   */
-  getBotdefSet(name: string) {
-    return this.getYaml('default_config', name, WORK_PATH);
-  }
-
-  /**
    * 得到生成式配置
    * @param name
    * @returns
@@ -250,15 +242,6 @@ class Cfg {
   }
 
   /**
-   * 得到机器人配置
-   * @param name
-   * @returns
-   */
-  getBotConfig(name: string) {
-    return this.getYaml('config', name, WORK_PATH);
-  }
-
-  /**
    * 快速修改配置
    * @param data 要设置的数据
    * @param parentKeys 键的路径，数组格式分隔
@@ -274,9 +257,10 @@ class Cfg {
    * @param type 默认跑配置-defSet，用户配置-config
    * @param name 名称
    */
-  getYaml(type: string, name: string, path: string = ROOT_PATH) {
+  getYaml(type: 'config' | 'default_config', name: string) {
     try {
-      const file = join(path, `config/${type}/${name}.yaml`);
+      const dir = type === 'default_config' ? this.defConfigDir : this.userConfigDir;
+      const file = join(dir, `${name}.yaml`);
       const key = `${type}.${name}`;
       if (this.config[key]) return this.config[key];
       this.config[key] = YAML.parse(readFileSync(file, 'utf8'));
@@ -292,8 +276,9 @@ class Cfg {
    * @param type 默认跑配置-defSet，用户配置-config
    * @param name 名称
    */
-  setYaml(type: string, name: string, data: any, parentKeys: any[]) {
-    const file = join(ROOT_PATH, `config/${type}/${name}.yaml`);
+  setYaml(type: 'config' | 'default_config', name: string, data: any, parentKeys: any[]) {
+    let dir = type === 'default_config' ? this.defConfigDir : this.userConfigDir;
+    const file = join(dir, `${name}.yaml`);
     let doc = new yamlHandler(file);
     doc.setDataRecursion(data, parentKeys);
     doc.save();
@@ -305,8 +290,9 @@ class Cfg {
    * @param type 默认跑配置-defSet，用户配置-config
    * @param name 名称
    */
-  setYamlAll(name, data, type = 'config') {
-    const file = join(ROOT_PATH, `config/${type}/${name}.yaml`);
+  setYamlAll(name, data, type: 'config' | 'default_config' = 'config') {
+    let dir = type === 'default_config' ? this.defConfigDir : this.userConfigDir;
+    const file = join(dir, `${name}.yaml`);
     let doc = new yamlHandler(file);
     Object.keys(data).forEach(key => {
       doc.set(key, data[key]);
@@ -321,14 +307,8 @@ class Cfg {
    * @returns
    */
   mergeYamlFile() {
-    const path = join(ROOT_PATH, 'config', 'config');
-    const pathDef = join(ROOT_PATH, 'config', 'default_config');
-
-    if (!existsSync(path)) {
-      mkdirSync(path, {
-        recursive: true,
-      });
-    }
+    const path = this.userConfigDir;
+    const pathDef = this.defConfigDir;
 
     // 得到文件
     const files = readdirSync(pathDef).filter(file => file.endsWith('.yaml'));
@@ -393,7 +373,7 @@ class Cfg {
     const watcher = chokidar.watch(file);
     watcher.on('change', () => {
       this.config[key] = YAML.parse(readFileSync(file, 'utf8'));
-      logger.mark(`[${pluginInfo.PLUGIN_NAME}][读取|修改配置文件][${name}]`);
+      logger.mark(`[${pluginInfo.PLUGIN_NAME}][修改配置文件][${name}]`);
     });
     this.watcher[key] = watcher;
   }

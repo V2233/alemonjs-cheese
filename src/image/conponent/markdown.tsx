@@ -8,7 +8,7 @@ import { getTime } from '@src/utils/index';
 import { LinkStyleSheet } from 'jsxp';
 import React from 'react';
 
-import { Template, HeaderBox, Container, TabLable, Item } from '../common';
+import { Container, HeaderBox, Item, TabLable, Template } from '../common';
 
 interface IData {
   title?: string;
@@ -66,6 +66,12 @@ export default function App({ data, theme }: Props) {
             <Item classname="itemOne" style={{ width: 'calc(100% - 10px)' }}>
               <div className="markdown-body w-full" data-theme={themeCfg.model}>
                 <div dangerouslySetInnerHTML={{ __html: data.html }} />
+                <script type="module">
+                  `
+                  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.esm.min.mjs';
+                  mermaid.initialize({  });
+                  `
+                </script>
               </div>
             </Item>
           </div>
@@ -74,3 +80,4 @@ export default function App({ data, theme }: Props) {
     </Template>
   );
 }
+

@@ -36,36 +36,6 @@ export function getTime(timeStamp = new Date(), format = 'YYYY/MM/DD hh:mm:ss') 
   return formattedDate;
 }
 
-interface ITime {
-  hour?: number;
-  minute?: number;
-  second?: number;
-}
-/**
- * 每天定时任务
- * @param executeTask 任务
- * @returns
- */
-export function scheduleTask(executeTask: Function, time: ITime = {}): NodeJS.Timeout {
-  const now = new Date();
-  const target = new Date(now);
-  target.setHours(time.hour || 0, time.minute || 0, time.second || 0); // 设置到今天的指定时间
-
-  // 如果今天的指定时间已经过了，则设置为明天的指定时间
-  if (target < now) {
-    target.setDate(target.getDate() + 1);
-  }
-
-  const msUntilExecution = target.getTime() - now.getTime();
-
-  // 设置定时器，在每天0点执行任务
-  return setTimeout(() => {
-    executeTask();
-    // 重新调度任务，以确保每天都能执行
-    scheduleTask(executeTask, time);
-  }, msUntilExecution);
-}
-
 /**
  * 获取文件buffer
  * @param url

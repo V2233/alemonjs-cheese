@@ -6,6 +6,6 @@ export default defineChildren({
     };
   },
   onCreated() {
-    logger.info('[cheese]Start OpenAI APP');
+    logger.info('[alemonjs-cheese] Loaded successfully!');
   },
 });

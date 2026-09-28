@@ -3,6 +3,7 @@ import Help from '@src/image/conponent/help';
 import HtmlTemplate from '@src/image/conponent/html_template';
 import LoverRank from '@src/image/conponent/lover_rank';
 import LuckHistory from '@src/image/conponent/luck_history';
+import LuckRank from '@src/image/conponent/luck_rank';
 import Markdown from '@src/image/conponent/markdown';
 import MemeQs from '@src/image/conponent/meme_qs';
 import MemeRank from '@src/image/conponent/meme_rank';
@@ -17,6 +18,7 @@ const components = {
   setting: Setting,
   todayLuck: TodayLuck,
   luckHistory: LuckHistory,
+  luckRank: LuckRank,
   loverRank: LoverRank,
   memeRank: MemeRank,
   memeQs: MemeQs,

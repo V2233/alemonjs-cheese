@@ -1,6 +1,6 @@
 import { getConfigValue, useEvent } from 'alemonjs';
 
-export function useUserAvatar(useId: string) {
+export function useUserAvatar(useId: string, options?: { searchGroupStore?: boolean }) {
   const cfg = getConfigValue();
   const [event] = useEvent();
   if (event.current.Platform == 'qq-bot') {
