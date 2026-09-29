@@ -7,6 +7,7 @@ import { Pictures } from '@src/image/index';
 import { useEventStore } from '@src/store';
 import type { IGengItem, IGroup, IPlayer } from '@src/types/meme';
 import Cfg from '@src/utils/config';
+import { useEvent } from 'alemonjs';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -55,31 +56,35 @@ const isInGame = (guildId: string) => {
   return !!g && (g.status === 'questioning' || g.status === 'answered');
 };
 
-export default OnResponse(async (event, next) => {
-  const inGame = isInGame(event.GuildId);
+export default async () => {
+  const [event, next] = useEvent({
+    regular: /看图识梗|结束|懂王排行|识梗难度设置(.*)/,
+    selects: ['message.create', 'private.message.create'],
+  });
 
-  if (!(/看图识梗|结束|懂王排行|识梗难度设置(.*)/.test(event.MessageText) || inGame)) {
-    next();
-    return;
-  }
-
-  if (!event.GuildId) {
-    await sendAtText('仅支持群聊~');
+  if (!event.match.regular || !event.match.selects) {
     next();
     return;
   }
 
   await useErrorContext(async () => {
+    if (!event.current.IsPrivate) {
+      await sendAtText('仅支持群聊~');
+      next();
+      return;
+    }
+
+    const inGame = isInGame(event.current.GuildId);
     const cfg = Cfg.getConfig('meme');
 
     // 确保群对象存在（首次按默认值创建）
-    ensureGroup(event.GuildId, { degree: 6, cd: cfg.timeout });
+    ensureGroup(event.current.GuildId, { degree: 6, cd: cfg.timeout });
 
     // 拿最新的群对象（每次从 DB 读，保证状态一致）
-    const groupData = (): IGroup => getGroup(event.GuildId)!;
+    const groupData = (): IGroup => getGroup(event.current.GuildId)!;
 
     // 读取玩家对象（惰性创建）
-    const userData = (): IPlayer | null => getPlayer(event.GuildId, event.UserId);
+    const userData = (): IPlayer | null => getPlayer(event.current.GuildId, event.current.UserId);
 
     // 写群字段（轻量单列更新）
     const setGroupData = <T extends keyof IGroup>(protoName: T, data: IGroup[T]) => {
@@ -98,7 +103,7 @@ export default OnResponse(async (event, next) => {
       // （避免 import 太多，直接内联也行，这里用 db 对象）
       // 为了简洁，调用我们导出的方法
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      updateGroupField(event.GuildId, protoName as any, data);
+      updateGroupField(event.current.GuildId, protoName as any, data);
     };
 
     // 修改分数
@@ -113,7 +118,7 @@ export default OnResponse(async (event, next) => {
       } else {
         newScore = 0;
       }
-      savePlayer(event.GuildId, event.UserId, newScore);
+      savePlayer(event.current.GuildId, event.current.UserId, newScore);
     };
 
     // 随机抽题
@@ -151,20 +156,20 @@ export default OnResponse(async (event, next) => {
 
     // 清理该群所有计时器
     const clearTimers = () => {
-      if (timeoutCache[event.GuildId]) {
-        clearTimeout(timeoutCache[event.GuildId]);
-        delete timeoutCache[event.GuildId];
+      if (timeoutCache[event.current.GuildId]) {
+        clearTimeout(timeoutCache[event.current.GuildId]);
+        delete timeoutCache[event.current.GuildId];
       }
-      if (intervalCache[event.GuildId]) {
-        clearTimeout(intervalCache[event.GuildId]);
-        delete intervalCache[event.GuildId];
+      if (intervalCache[event.current.GuildId]) {
+        clearTimeout(intervalCache[event.current.GuildId]);
+        delete intervalCache[event.current.GuildId];
       }
     };
 
     // 发起看图识梗
     const sendQs = async () => {
       setGroupData('status', 'questioning');
-      questionTs[event.GuildId] = Date.now();
+      questionTs[event.current.GuildId] = Date.now();
 
       const question = getQs();
 
@@ -174,7 +179,7 @@ export default OnResponse(async (event, next) => {
         tip: `你认为这个梗是（回答序号）`,
       };
 
-      if (event.Platform == 'qq-bot') {
+      if (event.current.Platform == 'qq-bot') {
         await sendAtImage(readFileSync(data.url), {
           md: fmd => {
             fmd.addBold(data.tip).addNewline();
@@ -201,9 +206,9 @@ export default OnResponse(async (event, next) => {
       clearTimers();
 
       // 启动超时计时器
-      timeoutCache[event.GuildId] = setTimeout(() => {
-        delete timeoutCache[event.GuildId];
-        if (getGroup(event.GuildId)?.status !== 'questioning') return;
+      timeoutCache[event.current.GuildId] = setTimeout(() => {
+        delete timeoutCache[event.current.GuildId];
+        if (getGroup(event.current.GuildId)?.status !== 'questioning') return;
 
         setGroupData('status', 'idle');
 
@@ -226,19 +231,19 @@ export default OnResponse(async (event, next) => {
       }, groupData().cd * 1000);
     };
 
-    if (/看图识梗/.test(event.MessageText)) {
+    if (/看图识梗/.test(event.current.MessageText)) {
       sendQs();
       return;
     }
 
     // ============ 懂王排行 ============
-    if (/懂王排行/.test(event.MessageText)) {
+    if (/懂王排行/.test(event.current.MessageText)) {
       let pageSum = 0;
       const store = useEventStore();
       const group = await store.getGroup();
       const members = group?.members || {};
 
-      const rankRows = getGroupScoreRank(event.GuildId);
+      const rankRows = getGroupScoreRank(event.current.GuildId);
 
       const rankList = rankRows.map(row => ({
         avatar: members[row.userId]?.avatar,
@@ -249,7 +254,7 @@ export default OnResponse(async (event, next) => {
 
       pageSum = Math.ceil(rankList.length / sliceNum);
       page = 0;
-      const pageMatch = event.MessageText.match(/懂王排行\s*(\d+)/);
+      const pageMatch = event.current.MessageText.match(/懂王排行\s*(\d+)/);
       if (pageMatch) {
         page = Number(pageMatch[1] || 0);
         if (page > pageSum) {
@@ -260,7 +265,7 @@ export default OnResponse(async (event, next) => {
 
       let currentUserId = -1;
       if (page == 0) {
-        currentUserId = rankList.findIndex(item => item.playerId == event.UserId);
+        currentUserId = rankList.findIndex(item => item.playerId == event.current.UserId);
         if (currentUserId != -1) {
           page = Math.ceil(currentUserId / sliceNum) || 1;
           currentUserId = currentUserId - (page - 1) * sliceNum;
@@ -282,8 +287,8 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ 难度设置 ============
-    if (/识梗难度设置(简单|一般|困难|地狱)/.test(event.MessageText)) {
-      let level = event.MessageText.replace(/.*识梗难度设置/, '');
+    if (/识梗难度设置(简单|一般|困难|地狱)/.test(event.current.MessageText)) {
+      let level = event.current.MessageText.replace(/.*识梗难度设置/, '');
       switch (level) {
         case '简单':
           setGroupData('degree', 4);
@@ -308,7 +313,7 @@ export default OnResponse(async (event, next) => {
     // ============ 答题（优先级最低） ============
     if (inGame) {
       // 结束
-      if (/结束/.test(event.MessageText)) {
+      if (/结束/.test(event.current.MessageText)) {
         clearTimers();
         setGroupData('status', 'idle');
         await sendAtText('已结束本次竞答！');
@@ -317,10 +322,10 @@ export default OnResponse(async (event, next) => {
 
       // 初始化玩家对象
       if (!userData()) {
-        savePlayer(event.GuildId, event.UserId, 0);
+        savePlayer(event.current.GuildId, event.current.UserId, 0);
       }
 
-      const playerAns = event.MessageText;
+      const playerAns = event.current.MessageText;
       const ansCount = groupData().degree;
 
       // 检测回答是否有效
@@ -335,7 +340,9 @@ export default OnResponse(async (event, next) => {
       if (!validAnswer) {
         if (groupData().status === 'questioning') {
           const now = Date.now();
-          const leftCD = Math.ceil(groupData().cd - (now - questionTs[event.GuildId]) / 1000);
+          const leftCD = Math.ceil(
+            groupData().cd - (now - questionTs[event.current.GuildId]) / 1000
+          );
           await sendAtText(
             `回答无效哦~请回复答案对应序号！\n发送【结束】可取消本次答题~\npass: 将在 ${leftCD} 秒后自动结束！`
           );
@@ -355,9 +362,9 @@ export default OnResponse(async (event, next) => {
       setGroupData('status', 'answered');
 
       // 立刻清掉超时计时器
-      if (timeoutCache[event.GuildId]) {
-        clearTimeout(timeoutCache[event.GuildId]);
-        delete timeoutCache[event.GuildId];
+      if (timeoutCache[event.current.GuildId]) {
+        clearTimeout(timeoutCache[event.current.GuildId]);
+        delete timeoutCache[event.current.GuildId];
       }
 
       // 判定对错
@@ -365,14 +372,14 @@ export default OnResponse(async (event, next) => {
         setScore(difScore());
         const rightTip = `恭喜答对！获得【${difScore()}】分奖励！\n您当前分数为：${userData()!.score} !\n`;
 
-        if (event.Platform == 'qq-bot') {
+        if (event.current.Platform == 'qq-bot') {
           await sendAtText(rightTip, {
             md: fmd => fmd.addText(cfg.interval + ' 秒后将自动发送下一题...'),
           });
         } else {
           const img = await Pictures('memeQs', {
             data: {
-              avatar: event.UserAvatar || '',
+              avatar: event.current.UserAvatar || '',
               url: gengList[groupData().id].pic,
               tip: rightTip,
             },
@@ -382,14 +389,14 @@ export default OnResponse(async (event, next) => {
         }
       } else {
         const errorTip = `不对呢~正确答案是\n【${groupData().ans}】(${gengList[groupData().id]?.title})!\n恭喜错失 ${difScore()} 分奖励！\n嘤嘤嘤~您当前分数为：${userData()!.score} \n`;
-        if (event.Platform == 'qq-bot') {
+        if (event.current.Platform == 'qq-bot') {
           await sendAtText(errorTip, {
             md: fmd => fmd.addText(cfg.interval + ' 秒后将自动发送下一题...'),
           });
         } else {
           const img = await Pictures('memeQs', {
             data: {
-              avatar: event.UserAvatar || '',
+              avatar: event.current.UserAvatar || '',
               url: gengList[groupData().id].pic,
               tip: errorTip,
             },
@@ -400,19 +407,19 @@ export default OnResponse(async (event, next) => {
       }
 
       // 启动冷却计时器
-      if (intervalCache[event.GuildId]) {
-        clearTimeout(intervalCache[event.GuildId]);
+      if (intervalCache[event.current.GuildId]) {
+        clearTimeout(intervalCache[event.current.GuildId]);
       }
-      intervalCache[event.GuildId] = setTimeout(() => {
-        delete intervalCache[event.GuildId];
-        if (getGroup(event.GuildId)?.status !== 'answered') return;
+      intervalCache[event.current.GuildId] = setTimeout(() => {
+        delete intervalCache[event.current.GuildId];
+        if (getGroup(event.current.GuildId)?.status !== 'answered') return;
         sendQs();
       }, cfg.interval * 1000);
 
       return;
     }
   });
-}, 'message.create');
+};
 
 // 洗牌算法
 function shuffle<T>(array: Array<T>): Array<T> {

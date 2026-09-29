@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 // import { groupStore } from '@src/apps/store/res'
 import { useErrorContext } from '@src/hooks/error';
 import { sendAtImage, sendAtText } from '@src/hooks/send';
@@ -124,5 +126,3 @@ const res = OnResponse(async (event, next) => {
     next();
   });
 }, 'message.create');
-
-export default OnResponse([res.current], 'message.create');

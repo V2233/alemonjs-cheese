@@ -7,9 +7,9 @@ import { sendAtImage, sendAtText } from '@src/hooks/send';
 import { Pictures } from '@src/image/index';
 import { useEventStore } from '@src/store';
 import { requestBuffer } from '@src/utils';
-import { ResultCode, useMention } from 'alemonjs';
+import { ResultCode, useEvent, useMention } from 'alemonjs';
 
-import { applyFavor } from './service/favor';
+import { applyFavor, FavorResult } from './service/favor';
 import {
   createMarriage,
   divorce,
@@ -21,21 +21,25 @@ import { getRankPage } from './service/rank';
 import { withBaseMdTip, withFavorTip } from './ui/tips';
 import { getPartner } from './utils/pair';
 
-let page = 1;
 const sliceNum = 25;
 
-export default OnResponse(async (event, next) => {
-  if (
-    !/^(\/|#)?((娶|嫁)群友|闹离婚|确认离婚|强(娶|嫁)|我对象呢|抢群友|亲密排行|(老婆|老公)(亲亲|羞羞|打你|做饭|买买))/.test(
-      event.MessageText
-    )
-  ) {
+export default async () => {
+  const [event, next] = useEvent({
+    regular:
+      /^(\/|#)?((娶|嫁)群友|闹离婚|确认离婚|强(娶|嫁)|我对象呢|抢群友|亲密排行|(老婆|老公)(亲亲|羞羞|打你|做饭|买买))/,
+    selects: ['message.create', 'private.message.create'],
+  });
+  if (!event.match.regular || !event.match.selects) {
     next();
     return;
   }
 
   await useErrorContext(async () => {
-    if (!event.GuildId) {
+    if (event.current.IsPrivate) {
+      await sendAtText('请在群聊发送！');
+      return;
+    }
+    if (!event.current.GuildId) {
       await sendAtText('仅在群聊可用！');
       return;
     }
@@ -44,7 +48,7 @@ export default OnResponse(async (event, next) => {
     const group = await store.getGroup();
 
     const getAvatarUrl = async (userId: string) => {
-      const user = await store.findMember({ GuildId: event.GuildId, UserId: userId });
+      const user = await store.findMember({ GuildId: event.current.GuildId, UserId: userId });
       return user?.avatar || useUserAvatar(userId);
     };
 
@@ -60,26 +64,26 @@ export default OnResponse(async (event, next) => {
     };
 
     // ============ @ 人解析 ============
-    const [mention] = useMention(event);
+    const [mention] = useMention(event.current);
     const botSelf = await mention.findOne({ IsBot: false });
     const atUser = botSelf.code == ResultCode.Ok ? botSelf.data : null;
     const atId = atUser?.UserId;
 
     // ============ 亲密排行 ============
-    if (/亲密排行/.test(event.MessageText)) {
+    if (/亲密排行/.test(event.current.MessageText)) {
       const memberMap = group?.members || {};
       const allUsers = await store.getUsers();
       const mergedMap = { ...allUsers, ...memberMap };
 
       // 计算页码：显式给了数字就用数字，否则传 0 表示「定位到我」
-      const pageMatch = event.MessageText.match(/亲密排行\s*(\d+)/);
+      const pageMatch = event.current.MessageText.match(/亲密排行\s*(\d+)/);
       const requestPage = pageMatch ? Number(pageMatch[1]) || 1 : 0;
 
       const { list, rowIndexInPage, currentPage, pageSum } = getRankPage(
         requestPage,
         sliceNum,
         mergedMap,
-        event.UserId
+        event.current.UserId
       );
 
       // 越界提示
@@ -117,13 +121,13 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ 我对象呢 ============
-    if (/我对象呢/.test(event.MessageText)) {
-      const marriage = findMarriageByUser(event.UserId);
+    if (/我对象呢/.test(event.current.MessageText)) {
+      const marriage = findMarriageByUser(event.current.UserId);
       if (!marriage) {
         await sendAtText(`\n醒醒吧，你还没对象呢！`, { md: withBaseMdTip });
         return;
       }
-      const partner = getPartner(marriage, event.UserId);
+      const partner = getPartner(marriage, event.current.UserId);
       if (!group?.members[partner]) {
         await sendAtText(
           `\n你的对象不在本群哦，可发送【闹离婚】后重新绑定！\n注意：离婚后你和她将分走一半共同财产`,
@@ -141,12 +145,12 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ 强娶 ============
-    if (/强(娶|嫁)/.test(event.MessageText)) {
+    if (/强(娶|嫁)/.test(event.current.MessageText)) {
       if (!atId) {
         await sendAtText(`\n真可惜，娶老婆失败了，嘤嘤嘤，要@群友再发送哦~`, { md: withBaseMdTip });
         return;
       }
-      if (event.UserId === atId) {
+      if (event.current.UserId === atId) {
         await sendAtText(`\n你个自恋狂，是想自己和自己结婚吗？真够离谱的~`, { md: withBaseMdTip });
         return;
       }
@@ -155,9 +159,9 @@ export default OnResponse(async (event, next) => {
         return;
       }
 
-      const myMarriage = findMarriageByUser(event.UserId);
+      const myMarriage = findMarriageByUser(event.current.UserId);
       if (myMarriage) {
-        const partner = getPartner(myMarriage, event.UserId);
+        const partner = getPartner(myMarriage, event.current.UserId);
         await replyWithPartnerAvatar(partner, fmd =>
           fmd.addText(`\n你今天已经有对象啦 `).addMention(partner).addText(`\n别三心二意了！`)
         );
@@ -169,7 +173,7 @@ export default OnResponse(async (event, next) => {
         return;
       }
 
-      createMarriage(event.UserId, atId);
+      createMarriage(event.current.UserId, atId);
       await replyWithPartnerAvatar(atId, fmd =>
         fmd.addText(`\n你今天的老婆是 `).addMention(atId).addText(`\n看好她哦，别让她被抢走了。`)
       );
@@ -177,7 +181,7 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ 抢群友 ============
-    if (/抢群友/.test(event.MessageText)) {
+    if (/抢群友/.test(event.current.MessageText)) {
       if (!atId) {
         await sendAtText(`\n你想抢空气吗？要@群友再发送哦~`, { md: withBaseMdTip });
         return;
@@ -187,7 +191,7 @@ export default OnResponse(async (event, next) => {
         return;
       }
 
-      if (hasMarriage(event.UserId)) {
+      if (hasMarriage(event.current.UserId)) {
         await sendAtText(`你都已经有对象了，还想抢呢？搞啥呢这是，三妻四妾是吧？爬！`, {
           md: withBaseMdTip,
         });
@@ -213,7 +217,7 @@ export default OnResponse(async (event, next) => {
         return;
       }
 
-      stealMarriage(event.UserId, atId, targetMarriage.marriageId);
+      stealMarriage(event.current.UserId, atId, targetMarriage.marriageId);
       await replyWithPartnerAvatar(atId, fmd =>
         fmd.addText(`\n你成功的抢到了她 `).addMention(atId).addText(` 运气不错嘛~`)
       );
@@ -221,8 +225,8 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ 闹离婚 / 确认离婚 ============
-    if (/闹离婚/.test(event.MessageText)) {
-      const marriage = findMarriageByUser(event.UserId);
+    if (/闹离婚/.test(event.current.MessageText)) {
+      const marriage = findMarriageByUser(event.current.UserId);
       if (!marriage) {
         await sendAtText(`\n醒醒吧，你连对象都没有，跟锤子离婚呢~`, { md: withBaseMdTip });
         return;
@@ -247,8 +251,8 @@ export default OnResponse(async (event, next) => {
       return;
     }
 
-    if (/确认离婚/.test(event.MessageText)) {
-      const result = divorce(event.UserId);
+    if (/确认离婚/.test(event.current.MessageText)) {
+      const result = divorce(event.current.UserId);
       if (!result) {
         await sendAtText(`\n醒醒吧，你连对象都没有，跟锤子离婚呢~`, { md: withBaseMdTip });
         return;
@@ -258,10 +262,10 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ 娶群友 / 嫁群友 ============
-    if (/(娶|嫁)群友/.test(event.MessageText)) {
-      const myMarriage = findMarriageByUser(event.UserId);
+    if (/(娶|嫁)群友/.test(event.current.MessageText)) {
+      const myMarriage = findMarriageByUser(event.current.UserId);
       if (myMarriage) {
-        const partner = getPartner(myMarriage, event.UserId);
+        const partner = getPartner(myMarriage, event.current.UserId);
         await replyWithPartnerAvatar(partner, fmd =>
           fmd.addText(`\n你今天已经有对象啦 `).addMention(partner).addText(`\n别三心二意了！`)
         );
@@ -270,7 +274,9 @@ export default OnResponse(async (event, next) => {
 
       const members = group?.members || {};
       // 只从「单身」的群成员里抽
-      const singles = Object.keys(members).filter(id => id !== event.UserId && !hasMarriage(id));
+      const singles = Object.keys(members).filter(
+        id => id !== event.current.UserId && !hasMarriage(id)
+      );
 
       if (singles.length === 0) {
         await sendAtText(`\n群里已经没有单身的人啦，你今天是单身贵族哦~`, {
@@ -280,8 +286,10 @@ export default OnResponse(async (event, next) => {
       }
 
       const picked = singles[Math.floor(Math.random() * singles.length)];
-      const isMarry = /娶群友/.test(event.MessageText);
-      const [userA, userB] = isMarry ? [event.UserId, picked] : [picked, event.UserId];
+      const isMarry = /娶群友/.test(event.current.MessageText);
+      const [userA, userB] = isMarry
+        ? [event.current.UserId, picked]
+        : [picked, event.current.UserId];
 
       createMarriage(userA, userB);
 
@@ -292,7 +300,7 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ 亲密度操作 ============
-    const favorMatch = event.MessageText.match(/(老婆|老公)(亲亲|羞羞|打你|做饭|买买)/);
+    const favorMatch = event.current.MessageText.match(/(老婆|老公)(亲亲|羞羞|打你|做饭|买买)/);
     if (favorMatch) {
       const actionMap: Record<string, 'kiss' | 'shy' | 'shopping' | 'cook' | 'hit'> = {
         亲亲: 'kiss',
@@ -303,16 +311,16 @@ export default OnResponse(async (event, next) => {
       };
       const action = actionMap[favorMatch[2]];
 
-      const marriage = findMarriageByUser(event.UserId);
+      const marriage = findMarriageByUser(event.current.UserId);
       if (!marriage) {
         await sendAtText(`\n你还没对象呢，提升个锤子好感！`, { md: withBaseMdTip });
         return;
       }
-      const partner = getPartner(marriage, event.UserId);
+      const partner = getPartner(marriage, event.current.UserId);
 
-      let result;
+      let result: FavorResult | null;
       try {
-        result = applyFavor(event.UserId, action);
+        result = applyFavor(event.current.UserId, action);
       } catch (e: any) {
         if (e.message === 'IN_CD') {
           await sendAtText(
@@ -354,4 +362,4 @@ export default OnResponse(async (event, next) => {
       return;
     }
   });
-}, 'message.create');
+};

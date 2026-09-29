@@ -5,7 +5,7 @@ import type { IEmoDetail } from '@src/types/emotion';
 import { createMD5 } from '@src/utils/index';
 import { toMarkdown } from '@src/utils/marked';
 import { assetsPath, port } from '@src/utils/server';
-import { ResultCode, useMention } from 'alemonjs';
+import { ResultCode, useEvent, useMention } from 'alemonjs';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -81,24 +81,28 @@ const getHybridTip = () => {
     .join('\n');
 };
 
-export default OnResponse(async (event, next) => {
-  if (
-    !/^(\/|#)?头像合成帮助|搜索图片|获取图片(.*)|混合模式(.*)|^第(\d+)页$|合成头像(.*)|/.test(
-      event.MessageText
-    )
-  ) {
+export default async () => {
+  const [event, next] = useEvent({
+    regular: /头像合成帮助|搜索图片|获取图片(.*)|混合模式(.*)|合成头像(.*)/,
+    selects: ['message.create', 'private.message.create'],
+  });
+
+  if (!event.match.regular || !event.match.selects) {
     next();
     return;
   }
 
   await useErrorContext(async () => {
+    await sendAtText('暂不可用~');
+    next();
+    return;
     // 被At的人
-    const [mention] = useMention(event);
+    const [mention] = useMention(event.current);
     const botSelf = await mention.findOne({ IsBot: false });
     const user = botSelf.code == ResultCode.Ok ? botSelf.data : null;
 
-    if (/混合模式(.*)/.test(event.MessageText)) {
-      if (/混合模式$/.test(event.MessageText)) {
+    if (/混合模式(.*)/.test(event.current.MessageText)) {
+      if (/混合模式$/.test(event.current.MessageText)) {
         const img = await Pictures('markdown', {
           data: {
             title: '图片合成混合模式设置',
@@ -115,7 +119,7 @@ export default OnResponse(async (event, next) => {
           await sendAtText('图片加载失败');
         }
       } else {
-        const id = Number(event.MessageText.replace(/.*混合模式/, ''));
+        const id = Number(event.current.MessageText.replace(/.*混合模式/, ''));
         if (id < 1 || id > mixMode.length) {
           await sendAtText('序号不对呢~');
           return;
@@ -127,7 +131,7 @@ export default OnResponse(async (event, next) => {
       }
     }
 
-    if (/头像合成帮助/.test(event.MessageText)) {
+    if (/头像合成帮助/.test(event.current.MessageText)) {
       await sendAtText(
         `--------万能头像合成--------\n\n` +
           `【(头像合成指令)】触发头像合成，默认【国庆】，加数字则合成指定背景头像\n\n` +
@@ -139,8 +143,8 @@ export default OnResponse(async (event, next) => {
       );
     }
 
-    if (/搜索图片(.*)/.test(event.MessageText)) {
-      curKeyword = event.MessageText.replace(/.*搜索图片/, '') ?? curKeyword;
+    if (/搜索图片(.*)/.test(event.current.MessageText)) {
+      curKeyword = event.current.MessageText.replace(/.*搜索图片/, '') ?? curKeyword;
 
       pngsList = await reqPngList(curKeyword, pageNo, pageSize);
 
@@ -179,7 +183,7 @@ export default OnResponse(async (event, next) => {
 
     let match: RegExpMatchArray | null = null;
 
-    if ((match = event.MessageText.match(/获取图片(\d+)/))) {
+    if ((match = event.current.MessageText.match(/获取图片(\d+)/))) {
       const id = Number(match[1]);
       if (id < 0 || id >= pageSize) {
         await sendAtText(`发送0~${pageSize - 1}`);
@@ -191,7 +195,7 @@ export default OnResponse(async (event, next) => {
       await sendAtImage(maskBuffer);
     }
 
-    if ((match = event.MessageText.match(/合成头像(\d+)/))) {
+    if ((match = event.current.MessageText.match(/合成头像(\d+)/))) {
       const id = Number(match[1]);
       if (id < 0 || id >= pageSize) {
         await sendAtText(`发送0~${pageSize - 1}`);
@@ -211,7 +215,8 @@ export default OnResponse(async (event, next) => {
       const img = await Pictures('makeEmo', {
         data: {
           originUrl:
-            (user ? user : event).UserAvatar || `https://q1.qlogo.cn/g?b=qq&s=0&nk=${event.UserId}`,
+            (user ? user : event.current).UserAvatar ||
+            `https://q1.qlogo.cn/g?b=qq&s=0&nk=${event.current.UserId}`,
           maskUrl: url,
           mixBlendMode,
         },
@@ -224,8 +229,8 @@ export default OnResponse(async (event, next) => {
       }
     }
 
-    if (/^第(\d+)页$/.test(event.MessageText)) {
-      pageNo = (Number((/第(\d+)页/.exec(event.MessageText) || [])[1]) || 1) - 1;
+    if (/^第(\d+)页$/.test(event.current.MessageText)) {
+      pageNo = (Number((/第(\d+)页/.exec(event.current.MessageText) || [])[1]) || 1) - 1;
     }
   });
-}, 'message.create');
+};

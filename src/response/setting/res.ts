@@ -3,15 +3,21 @@ import { sendAtImage, sendAtText } from '@src/hooks/send';
 import { Pictures } from '@src/image/index';
 import Cfg from '@src/utils/config';
 import { sleep } from '@src/utils/index';
+import { useEvent } from 'alemonjs';
 
-export default OnResponse(async (event, next) => {
-  if (!/奶酪设置/.test(event.MessageText)) {
+export default async () => {
+  const [event, next] = useEvent({
+    regular: /奶酪设置/,
+    selects: ['message.create', 'private.message.create'],
+  });
+
+  if (!event.match.regular || !event.match.selects) {
     next();
     return;
   }
 
   await useErrorContext(async () => {
-    let txt = event.MessageText.replace(/.*奶酪设置/, '');
+    let txt = event.current.MessageText.replace(/.*奶酪设置/, '');
     if (!txt) {
       const img = await Pictures('setting', {
         data: Cfg.description,
@@ -25,7 +31,7 @@ export default OnResponse(async (event, next) => {
       return;
     }
 
-    if (!event.IsMaster) {
+    if (!event.current.IsMaster) {
       await sendAtText('请找主人进行设置~');
       next();
       return;
@@ -48,7 +54,7 @@ export default OnResponse(async (event, next) => {
     });
 
     const reg = new RegExp(`奶酪设置(${regArr.join('|')})(.*)`);
-    let match = event.MessageText.match(reg);
+    let match = event.current.MessageText.match(reg);
     if (match) {
       let i = regArr.findIndex(item => item === match[1]);
       if (match[2] != '') {
@@ -83,4 +89,4 @@ export default OnResponse(async (event, next) => {
       await sendAtText('图片加载失败');
     }
   });
-}, 'message.create');
+};

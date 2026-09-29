@@ -9,7 +9,7 @@ import type { IUserLuckHistory } from '@src/types/luck';
 import { sleep } from '@src/utils';
 import Cfg from '@src/utils/config';
 import { scheduleTask } from '@src/utils/task';
-import { ResultCode, useMention } from 'alemonjs';
+import { ResultCode, useEvent, useMention } from 'alemonjs';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -42,19 +42,24 @@ scheduleTask(
 let sliceNum = 25;
 let page = 1;
 
-export default OnResponse(async (event, next) => {
-  if (
-    !/^(\/|#)?(今日运势|运气|祝福|诅咒|逆天改命|刷新运势|历史运势|运势财富榜(.*))$/.test(
-      event.MessageText
-    )
-  ) {
+export default async () => {
+  const [event, next] = useEvent({
+    regular: /^(\/|#)?(今日运势|运气|祝福|诅咒|逆天改命|刷新运势|历史运势|运势财富榜(.*))$/,
+    selects: ['message.create', 'private.message.create'],
+  });
+  if (!event.match.regular || !event.match.selects) {
     next();
     return;
   }
 
   await useErrorContext(async () => {
+    if (event.current.IsPrivate) {
+      await sendAtText('请在群聊发送！');
+      return;
+    }
+
     // 手动刷新
-    if (/^(\/|#)?刷新运势$/.test(event.MessageText) && event.IsMaster) {
+    if (/^(\/|#)?刷新运势$/.test(event.current.MessageText) && event.current.IsMaster) {
       resetAllTested();
       await sendAtText('刷新成功！');
       next();
@@ -62,8 +67,8 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ 运势财富榜 ============
-    if (/^(\/|#)?运势财富榜(.*)/.test(event.MessageText)) {
-      if (!event.GuildId) {
+    if (/^(\/|#)?运势财富榜(.*)/.test(event.current.MessageText)) {
+      if (!event.current.GuildId) {
         await sendAtText('仅在群聊可用！');
         return;
       }
@@ -104,7 +109,7 @@ export default OnResponse(async (event, next) => {
 
       pageSum = Math.ceil(groupPlayers.length / sliceNum);
       page = 0;
-      const pageMatch = event.MessageText.match(/运势财富榜\s*(\d+)/);
+      const pageMatch = event.current.MessageText.match(/运势财富榜\s*(\d+)/);
       if (pageMatch) {
         page = Number(pageMatch[1] || 0);
         if (page > pageSum) {
@@ -115,7 +120,7 @@ export default OnResponse(async (event, next) => {
 
       let currentUserId = -1;
       if (page == 0) {
-        currentUserId = groupPlayers.findIndex(item => item.playerId == event.UserId);
+        currentUserId = groupPlayers.findIndex(item => item.playerId == event.current.UserId);
         if (currentUserId != -1) {
           page = Math.ceil(currentUserId / sliceNum) || 1;
           currentUserId = currentUserId - (page - 1) * sliceNum;
@@ -137,10 +142,10 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ At 人解析 ============
-    const [mention] = useMention(event);
+    const [mention] = useMention(event.current);
     const botSelf = await mention.findOne({ IsBot: false });
     const atUser = botSelf.code == ResultCode.Ok ? botSelf.data : null;
-    const strUser = atUser?.UserId || event.UserId;
+    const strUser = atUser?.UserId || event.current.UserId;
 
     const cfg = Cfg.getConfig('theme');
     const bgUrl = cfg.bgurl;
@@ -164,11 +169,11 @@ export default OnResponse(async (event, next) => {
     const luckHandler = new LuckHandler(strUser);
 
     // ============ 今日运势 ============
-    if (/^(\/|#)?(今日运势|运气|祝福|诅咒|逆天改命)$/.test(event.MessageText)) {
+    if (/^(\/|#)?(今日运势|运气|祝福|诅咒|逆天改命)$/.test(event.current.MessageText)) {
       let luckList = fortuneList;
 
       // 逆天改命
-      if (/逆天改命/.test(event.MessageText)) {
+      if (/逆天改命/.test(event.current.MessageText)) {
         if (!user.list.length) {
           await sendAtText('你还没看今天的运势呢，改什么命啊o(≧▽≦o)', {
             btns: fbg =>
@@ -207,8 +212,8 @@ export default OnResponse(async (event, next) => {
       let addDebris = 0;
 
       // 诅咒
-      if (/诅咒/.test(event.MessageText)) {
-        const self = ensureUser(event.UserId);
+      if (/诅咒/.test(event.current.MessageText)) {
+        const self = ensureUser(event.current.UserId);
         if (!self.curseNums) {
           await sendAtText('你还剩余诅咒次数 0 ，成为 至尊无敌非酋王 才可以获得诅咒他人的机会哦~');
           return;
@@ -225,7 +230,7 @@ export default OnResponse(async (event, next) => {
           });
           return;
         }
-        if (atUser.UserId == event.UserId) {
+        if (atUser.UserId == event.current.UserId) {
           await sendAtText('您确定要诅咒自己吗？', {
             btns: fbg =>
               fbg
@@ -263,8 +268,8 @@ export default OnResponse(async (event, next) => {
       }
 
       // 祝福
-      if (/祝福/.test(event.MessageText)) {
-        const self = ensureUser(event.UserId);
+      if (/祝福/.test(event.current.MessageText)) {
+        const self = ensureUser(event.current.UserId);
         if (!self.blessNums) {
           await sendAtText('你还剩余祝福次数 0 ，成为 至尊无敌运气王 才可以获得祝福他人的机会哦~');
           return;
@@ -281,7 +286,7 @@ export default OnResponse(async (event, next) => {
           });
           return;
         }
-        if (atUser.UserId == event.UserId) {
+        if (atUser.UserId == event.current.UserId) {
           await sendAtText('不能祝福自己哦~', {
             btns: fbg =>
               fbg
@@ -318,7 +323,7 @@ export default OnResponse(async (event, next) => {
       }
 
       // 抽取 / 读取今日运势
-      if (!user.isTested || /逆天改命/.test(event.MessageText)) {
+      if (!user.isTested || /逆天改命/.test(event.current.MessageText)) {
         luckId = Math.floor(Math.random() * luckList.length);
         if (luckList[luckId].stars == 0) {
           addDebris = 0;
@@ -358,7 +363,7 @@ export default OnResponse(async (event, next) => {
 
       const luckyData = luckHandler.luckySummary(starCount, lots);
       const starcolor = luckHandler.starsColor(starCount);
-      const avator = (atUser ? atUser.UserAvatar : event.UserAvatar) || '';
+      const avator = (atUser ? atUser.UserAvatar : event.current.UserAvatar) || '';
 
       const fortuneData = {
         fortuneSummary,
@@ -388,7 +393,7 @@ export default OnResponse(async (event, next) => {
         }
       } else {
         if (user.isTested) {
-          if (/逆天改命/.test(event.MessageText)) {
+          if (/逆天改命/.test(event.current.MessageText)) {
             mixText = `恭喜改命成功，消耗了7个命运碎片，并获得了 ${addDebris} 个补充碎片！\n注意: 改命仅能保证比上一次的运势高，如果上一次运势为吉则改命后必成运气王！\n据说运气王拥有操纵他人运势的能力...`;
             await sendAtImage(
               readFileSync(
@@ -410,14 +415,14 @@ export default OnResponse(async (event, next) => {
         }
       }
 
-      if (/诅咒/.test(event.MessageText)) {
+      if (/诅咒/.test(event.current.MessageText)) {
         mixText = `您成功诅咒了他，他将被您的非凡运势所震慑！`;
       }
-      if (/祝福/.test(event.MessageText)) {
+      if (/祝福/.test(event.current.MessageText)) {
         mixText = `您成功祝福了他，他将继承您博大的胸襟！`;
       }
 
-      if (!user.isTested || /逆天改命/.test(event.MessageText)) {
+      if (!user.isTested || /逆天改命/.test(event.current.MessageText)) {
         user.isTested = true;
       }
 
@@ -452,7 +457,7 @@ export default OnResponse(async (event, next) => {
     }
 
     // ============ 历史运势 ============
-    if (/历史运势/.test(event.MessageText)) {
+    if (/历史运势/.test(event.current.MessageText)) {
       if (!user.list.length) {
         await sendAtText('你还没有运势记录哦~发送【今日运势】试试吧！');
         return;
@@ -472,7 +477,7 @@ export default OnResponse(async (event, next) => {
         luckyStar: luckHandler.luckyStar(starCount),
         starCount,
         starcolor,
-        avator: (atUser ? atUser.UserAvatar : event.UserAvatar) || '',
+        avator: (atUser ? atUser.UserAvatar : event.current.UserAvatar) || '',
         bgUrl,
       };
 
@@ -484,4 +489,4 @@ export default OnResponse(async (event, next) => {
       return;
     }
   });
-}, 'message.create');
+};

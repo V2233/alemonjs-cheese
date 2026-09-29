@@ -1,11 +1,10 @@
 {
-  "compilerOptions": {
-    "baseUrl": ".",
-    "ignoreDeprecations":"6.0",
-    "paths": {
-      "@src/*": ["./src/*"]
+  "references": [
+    {
+      "path": "./tsconfig.web.json"
+    },
+    {
+      "path": "./tsconfig.alemonjs.json"
     }
-  },
-  "include": ["./src/**/*", "./jsxp.config.tsx"],
-  "extends": "lvyjs/tsconfig.json"
+  ]
 }

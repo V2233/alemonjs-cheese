@@ -13,4 +13,10 @@ export default defineConfig({
     // 支持图片、字体、文本等静态资源
     filter: /\.(png|jpg|jpeg|gif|svg|webp|ico|yaml|txt|ttf|md)$/,
   },
+  build: {
+    tsdown: {
+      // dts: true,
+      tsconfig: 'tsconfig.alemonjs.json',
+    },
+  },
 });

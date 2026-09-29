@@ -4,15 +4,18 @@ import { Pictures } from '@src/image/index';
 import { pluginInfo } from '@src/package';
 import Cfg from '@src/utils/config';
 import { sleep } from '@src/utils/index';
+import { useEvent } from 'alemonjs';
 import { readFileSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 
-export default OnResponse(async (event, next) => {
+export default async () => {
+  const [event, next] = useEvent();
+
   await useErrorContext(async () => {
     const help = Cfg.getConfig('help');
     const custom_reg = new RegExp(help?.custom?.reg || '^我的帮助');
 
-    if (custom_reg.test(event.MessageText)) {
+    if (custom_reg.test(event.current.MessageText)) {
       let logoImg = help?.custom?.logo_img as string;
       if (logoImg)
         logoImg = logoImg.startsWith('http') ? logoImg : resolve(pluginInfo.DATA_PATH, logoImg);
@@ -35,7 +38,7 @@ export default OnResponse(async (event, next) => {
       return;
     }
 
-    if (/^(\/|#)?奶酪帮助$/.test(event.MessageText)) {
+    if (/^(\/|#)?奶酪帮助$/.test(event.current.MessageText)) {
       const img = await Pictures('help', {
         data: {
           title: '奶酪帮助',
@@ -54,10 +57,14 @@ export default OnResponse(async (event, next) => {
       return;
     }
 
-    if (/奶酪(查看|更改)帮助配置(.*)/.test(event.MessageText)) {
+    if (/奶酪(查看|更改)帮助配置(.*)/.test(event.current.MessageText)) {
       const yamlPath = join(pluginInfo.ROOT_PATH, 'config', 'config', 'help.yaml');
-      if (event.MessageText.includes('更改')) {
-        writeFileSync(yamlPath, event.MessageText.replace(/.*奶酪更改帮助配置(\+)?/, ''), 'utf-8');
+      if (event.current.MessageText.includes('更改')) {
+        writeFileSync(
+          yamlPath,
+          event.current.MessageText.replace(/.*奶酪更改帮助配置(\+)?/, ''),
+          'utf-8'
+        );
         await sendAtText('修改成功！');
       } else {
         await sendAtText(readFileSync(yamlPath, 'utf-8'));
@@ -66,6 +73,7 @@ export default OnResponse(async (event, next) => {
       }
       return;
     }
+
     next();
   });
-}, 'message.create');
+};
