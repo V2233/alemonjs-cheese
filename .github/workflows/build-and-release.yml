@@ -103,7 +103,7 @@ jobs:
           yarn build
           # yarn bundle  # bundle
           mkdir -p dist-release
-          # cp -rf ./dist dist-release/dist # bundle
+          cp -rf ./dist dist-release/dist # bundle
           cp -rf ./lib dist-release/lib
           cp -rf ./public dist-release/public
           cp -rf ./config dist-release/config
@@ -134,7 +134,8 @@ jobs:
           rm -rf .gitignore
 
           # 清理非 git 文件夹的其他内容（保护 .git 目录）
-          find . -mindepth 1 ! -path './.git*' -exec rm -rf {} + || true
+          # find . -mindepth 1 ! -path './.git*' -exec rm -rf {} + || true
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
           # 移动 dist-release 文件夹内容到根目录
           mv ../dist-release/* ./ || {
