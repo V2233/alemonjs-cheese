@@ -1,12 +1,14 @@
 {
   "name": "alemonjs-cheese",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "alemonjs插件",
   "author": "smallv",
   "main": "lib/index.js",
   "type": "module",
   "dependencies": {
-    "alemonjs-shared-store": " ^0.1.0",
+    "@koa/bodyparser": "^6.1.0",
+    "@koa/router": "^15.7.0",
+    "alemonjs-shared-store": "^0.1.2",
     "axios": "^1.20.0",
     "better-sqlite3": "^13.0.3",
     "chokidar": "^5.0.0",
@@ -35,6 +37,7 @@
   },
   "files": [
     "lib/**/*",
+    "dist/**/*",
     "public/**/*",
     "config/**/*"
   ],
@@ -45,7 +48,7 @@
   "alemonjs": {
     "build": "bundle",
     "web": {
-      "root": "public/static"
+      "root": "dist"
     },
     "desktop": {
       "commond": [
