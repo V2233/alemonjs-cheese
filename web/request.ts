@@ -1,6 +1,4 @@
-import { BASE_PATH } from './vars';
-
-const BASE = BASE_PATH + '/api';
+const BASE = './api';
 
 // GET
 export async function req<T>(url: string, params?: Record<string, string>): Promise<T> {
