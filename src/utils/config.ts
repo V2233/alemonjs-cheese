@@ -1,5 +1,6 @@
 import type { ICfgKey } from '@src/types/config';
 import chokidar from 'chokidar';
+import _ from 'lodash';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import YAML from 'yaml';
@@ -182,6 +183,13 @@ class Cfg {
             value: cfgMap['meme']['interval'],
             component: 'number',
           },
+          {
+            prop: 'merge_img',
+            title: '识梗合并渲染开启',
+            desc: '后面加true或false，图文合成单图',
+            value: cfgMap['meme']['merge_img'],
+            component: 'switch',
+          },
         ],
       },
       // {
@@ -341,10 +349,19 @@ class Cfg {
 
         // 合并一层配置，不适用于层级较深的对象或数组
         Object.entries(defCfg).forEach(([key, value]) => {
+          // default 是"随版本更新覆盖"的字段，强制用默认值，不合并用户旧值
+          if (key === 'default') {
+            doc.set(key, value);
+            return;
+          }
+
           if (key in cfg) {
-            if (value instanceof Object) {
-              // 合并子对象
-              doc.set(key, Object.assign(value, cfg[key]));
+            if (Array.isArray(value)) {
+              // 数组字段：明确语义。通常是覆盖，不做按索引 merge
+              doc.set(key, cfg[key]);
+            } else if (value instanceof Object) {
+              // 普通对象：深合并，target 用 {} 没问题
+              doc.set(key, _.merge({}, value, cfg[key]));
             } else {
               doc.set(key, cfg[key]);
             }
@@ -352,9 +369,6 @@ class Cfg {
             doc.set(key, value);
           }
         });
-        if (file == 'help') {
-          doc.set('default', defCfg['default']);
-        }
         doc.save(cfgFile);
       }
     }

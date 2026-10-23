@@ -1,9 +1,9 @@
-import { writeFileSync, readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import _ from 'lodash';
 import YAML from 'yaml';
 
 export default class YamlHandler {
-  document: any;
+  document!: ReturnType<typeof YAML.parseDocument>;
 
   /**
    * 读写yaml文件
@@ -12,7 +12,6 @@ export default class YamlHandler {
    * @param isWatch 是否监听文件变化
    */
   constructor(public yamlPath: string) {
-    this.yamlPath = yamlPath;
     this.initYaml();
   }
 
@@ -44,17 +43,14 @@ export default class YamlHandler {
   /*修改某个key的值*/
   set(keyPath: string, value: any) {
     this.document.setIn(keyPath.split('.'), value);
-    this.save();
   }
   /*删除key*/
   delete(keyPath: string) {
     this.document.deleteIn(keyPath.split('.'));
-    this.save();
   }
   //数组添加数据
   addIn(keyPath: string, value: any) {
     this.document.addIn(keyPath.split('.'), value);
-    this.save();
   }
   /**
    * 设置 document 的数据（递归式）
@@ -62,7 +58,6 @@ export default class YamlHandler {
    */
   setData(data: any) {
     this.setDataRecursion(data, []);
-    this.save();
   }
 
   setDataRecursion(data, parentKeys) {
@@ -96,10 +91,10 @@ export default class YamlHandler {
     let keys = keyPath.split('.');
     keys = this.mapParentKeys(keys);
     this.document.deleteIn(keys);
-    this.save();
   }
 
-  save(path = this.yamlPath) {
+  save(path?: string) {
+    if (!path) path = this.yamlPath;
     let yaml = this.document.toString();
     writeFileSync(path, yaml, 'utf8');
   }

@@ -43,7 +43,7 @@ export default async () => {
         data: {
           title: '奶酪帮助',
           desc: 'Cheese Menu',
-          list: help.default,
+          list: help.default ?? [],
           logo_img: resolve(pluginInfo.PUBLIC_PATH, 'cheese.png'),
         },
       });

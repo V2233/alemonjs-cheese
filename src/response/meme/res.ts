@@ -58,7 +58,7 @@ const isInGame = (guildId: string) => {
 
 export default async () => {
   const [event, next] = useEvent({
-    regular: /看图识梗|结束|懂王排行|识梗难度设置(.*)/,
+    regular: /看图识梗|结束|懂王排行|识梗难度设置(.*)|(\d+)/,
     selects: ['message.create', 'private.message.create'],
   });
 
@@ -68,7 +68,7 @@ export default async () => {
   }
 
   await useErrorContext(async () => {
-    if (!event.current.IsPrivate) {
+    if (!event.current.GuildId) {
       await sendAtText('仅支持群聊~');
       next();
       return;
@@ -179,7 +179,7 @@ export default async () => {
         tip: `你认为这个梗是（回答序号）`,
       };
 
-      if (event.current.Platform == 'qq-bot') {
+      if (!Cfg.getConfig('meme')?.merge_img) {
         await sendAtImage(readFileSync(data.url), {
           md: fmd => {
             fmd.addBold(data.tip).addNewline();
@@ -372,7 +372,7 @@ export default async () => {
         setScore(difScore());
         const rightTip = `恭喜答对！获得【${difScore()}】分奖励！\n您当前分数为：${userData()!.score} !\n`;
 
-        if (event.current.Platform == 'qq-bot') {
+        if (!Cfg.getConfig('meme')?.merge_img) {
           await sendAtText(rightTip, {
             md: fmd => fmd.addText(cfg.interval + ' 秒后将自动发送下一题...'),
           });
@@ -389,7 +389,7 @@ export default async () => {
         }
       } else {
         const errorTip = `不对呢~正确答案是\n【${groupData().ans}】(${gengList[groupData().id]?.title})!\n恭喜错失 ${difScore()} 分奖励！\n嘤嘤嘤~您当前分数为：${userData()!.score} \n`;
-        if (event.current.Platform == 'qq-bot') {
+        if (!Cfg.getConfig('meme')?.merge_img) {
           await sendAtText(errorTip, {
             md: fmd => fmd.addText(cfg.interval + ' 秒后将自动发送下一题...'),
           });
@@ -417,6 +417,8 @@ export default async () => {
       }, cfg.interval * 1000);
 
       return;
+    } else {
+      next();
     }
   });
 };

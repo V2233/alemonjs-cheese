@@ -30,6 +30,7 @@ interface IAi {
 interface IMeme {
   interval: number;
   timeout: number;
+  merge_img: boolean;
 }
 
 interface ICompositeImg {

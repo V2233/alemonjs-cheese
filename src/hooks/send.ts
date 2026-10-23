@@ -1,5 +1,7 @@
 import { Format, FormatButtonGroup, FormatMarkDown, useEvent, useMessage } from 'alemonjs';
 
+import { markdownToPlain } from './utils';
+
 type SendCallback = (fmt: Format, e: ReturnType<typeof useEvent>[0]) => Format;
 
 type MessageSendResult = ReturnType<ReturnType<typeof useMessage>[0]['send']>;
@@ -39,7 +41,6 @@ export const sendAtText = (
   return SendOnce((fmt, e) => {
     if (e.current.Platform == 'qq-bot') {
       const md = Format.createMarkdown().addMention(e.current.UserId).addNewline().addText(text);
-
       if (options && options.md) {
         options.md(md);
       }
@@ -50,10 +51,25 @@ export const sendAtText = (
       }
       return fmt;
     } else {
-      return fmt
-        .addMention(e.current.UserId)
-        .addText(text)
-        .addText(options?.tips ?? '');
+      fmt.addMention(e.current.UserId).addText('\n' + text);
+      if (options && options.md) {
+        const md = Format.createMarkdown();
+        options.md(md);
+        markdownToPlain(fmt, md.value.value, 0);
+      }
+      if (options && options.btns) {
+        fmt.addText('\n------其它指令-------');
+        const btns = Format.createButtonGroup();
+        options.btns(btns);
+        if (btns.value.type == 'BT.group') {
+          btns.value.value.forEach(item => {
+            fmt.addText('\n');
+            fmt.addText(item.value.map(button => button.options?.data || button.value).join(' | '));
+          });
+        }
+      }
+      options?.tips && fmt.addText('');
+      return fmt;
     }
   });
 };
@@ -87,7 +103,24 @@ export const sendAtImage = (
         }
       })();
     } else {
-      return Fmt.create().addMention(e.current.UserId).addImage(img);
+      const fmt = Fmt.create().addMention(e.current.UserId).addImage(img);
+      if (options && options.md) {
+        const md = Format.createMarkdown();
+        options.md(md);
+        markdownToPlain(fmt, md.value.value, 0);
+      }
+      if (options && options.btns) {
+        fmt.addText('\n------其它指令-------');
+        const btns = Format.createButtonGroup();
+        options.btns(btns);
+        if (btns.value.type == 'BT.group') {
+          btns.value.value.forEach(item => {
+            fmt.addText('\n');
+            fmt.addText(item.value.map(button => button.options?.data || button.value).join(' | '));
+          });
+        }
+      }
+      return fmt;
     }
   });
 };

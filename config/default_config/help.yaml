@@ -17,29 +17,49 @@ default: # 默认配置，会随着版本更新覆盖，请不要更改
     desc: ''
     list:
       - label: 看图识梗
-        desc: 发起看图识梗
+        desc: 发起看图识梗竞答
       - label: 懂王排行
         desc: 群排行榜
-          
-  - title: '合成头像'
+      - label: 识梗难度设置
+        desc: 简单 | 一般 | 困难 | 地狱
+
+  - title: '娶群友'
     desc: ''
     list:
-      - label: 搜索图片
-        desc: 作为头像合成素材
-      - label: 获取图片2
-        desc: 发送搜到的图片素材
-      - label: 第2页
-        desc: 按照该格式切换页码
-      - label: 合成头像
-        desc: 头像剪切到形状
-      - label: 混合模式
-        desc: 改变合成效果
-      - label: 合成头像2
-        desc: 按照该格式选择素材合成
+      - label: 娶群友
+        desc: 随机娶个单身群友
+      - label: 强娶
+        desc: 强行娶个单身群友
+      - label: 抢群友
+        desc: 抢别人的对象
+      - label: 我对象呢
+        desc: 看看自己对象
+      - label: 闹离婚
+        desc: 和群友离婚
+      - label: 亲密排行
+        desc: 亲密值排行榜
+      - label: 老婆亲亲
+        desc: 提升亲密值
+
+  # - title: '合成头像'
+  #   desc: ''
+  #   list:
+  #     - label: 搜索图片
+  #       desc: 作为头像合成素材
+  #     - label: 获取图片2
+  #       desc: 发送搜到的图片素材
+  #     - label: 第2页
+  #       desc: 按照该格式切换页码
+  #     - label: 合成头像
+  #       desc: 头像剪切到形状
+  #     - label: 混合模式
+  #       desc: 改变合成效果
+  #     - label: 合成头像2
+  #       desc: 按照该格式选择素材合成
 
   - title: '自定义帮助图'
     desc: ''
-    list: 
+    list:
       - label: 奶酪查看帮助配置
         desc: 发送自定义帮助配置
       - label: 奶酪更改帮助配置+配置
@@ -55,13 +75,12 @@ default: # 默认配置，会随着版本更新覆盖，请不要更改
       - label: mm+文本
         desc: 生成mermaid流程图
 
-
 custom: # 自定义帮助不会被版本更新覆盖，你可以按照格式更改以下内容
   reg: '我的帮助' # 触发该帮助的正则指令
   title: 自定义帮助 # 顶部标题栏标题
   desc: 自定义描述 # 顶部标题栏描述文字
   width: '530px' # 帮助图宽度，不填则使用全局宽度
-  logo: 底部版权文字更改 
+  logo: 底部版权文字更改
   logo_img: '' # 右上角logo图片,填写图片名称如logo.png并放到alemonjs/data/@cheese目录下
   list: # 分组
     - title: '自定义帮助' #分组标题

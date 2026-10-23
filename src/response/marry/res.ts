@@ -35,10 +35,6 @@ export default async () => {
   }
 
   await useErrorContext(async () => {
-    if (event.current.IsPrivate) {
-      await sendAtText('请在群聊发送！');
-      return;
-    }
     if (!event.current.GuildId) {
       await sendAtText('仅在群聊可用！');
       return;
