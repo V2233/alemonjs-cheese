@@ -17,6 +17,9 @@ export default defineConfig({
     tsdown: {
       // dts: true,
       tsconfig: 'tsconfig.alemonjs.json',
+      css: {
+        transformer: 'postcss',
+      },
     },
   },
 });
