@@ -51,6 +51,7 @@
     "@types/node": "^24",
     "@types/qrcode": "^1.5.6",
     "@types/ws": "^8.5.13",
+    "@tsdown/css": "^0.23.2",
     "alemonjs": "^2.1.103",
     "cssnano": "^8",
     "lvyjs": "^0.3.0-alpha.5",
