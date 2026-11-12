@@ -1,0 +1,26 @@
+{
+  "help": [
+    "get_help"
+  ],
+  "luck": [
+    "start_luck",
+    "get_luck_history",
+    "get_luck_rank"
+  ],
+  "meme": [
+    "start_meme",
+    "get_meme_rank",
+    "set_meme_degree"
+  ],
+  "marry": [
+    "start_marry",
+    "get_my_partner",
+    "get_marry_rank",
+    "start_divorce",
+    "confirm_divorce"
+  ],
+  "setting": [
+    "get_settings",
+    "update_setting"
+  ]
+}

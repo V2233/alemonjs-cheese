@@ -1,14 +1,17 @@
-import response from '@src/router';
 import { getConfig } from 'alemonjs';
 
 import pkgJson from '../package.json';
+import { cheeseExpose } from './expose';
+import response from './router';
 import koaRouter from './server/router';
+export { cheeseExpose } from './expose';
 
 export default defineChildren({
   register() {
     return {
       response,
       koaRouter,
+      expose: cheeseExpose,
     };
   },
   onCreated() {
