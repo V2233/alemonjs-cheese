@@ -1,5 +1,5 @@
 import type { IGroup, IGroupPlayers, IPlayer } from '@src/types/meme';
-import Database from 'better-sqlite3';
+import DatabaseCtor, { type Database } from 'alemonjs-shared-store/better-sqlite3';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
@@ -9,7 +9,7 @@ const dbDir = join(pluginInfo.DATA_PATH, 'meme-data');
 if (!existsSync(dbDir)) mkdirSync(dbDir, { recursive: true });
 
 const dbPath = join(dbDir, 'memeDB.sqlite');
-export const db = new Database(dbPath);
+export const db: Database = new DatabaseCtor(dbPath);
 
 // 开启 WAL 模式提升并发性能
 db.pragma('journal_mode = WAL');

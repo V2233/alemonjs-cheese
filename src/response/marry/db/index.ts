@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import DatabaseCtor, { type Database } from 'alemonjs-shared-store/better-sqlite3';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
@@ -8,7 +8,7 @@ const dbDir = join(pluginInfo.DATA_PATH, 'marry-data');
 if (!existsSync(dbDir)) mkdirSync(dbDir, { recursive: true });
 
 const dbPath = join(dbDir, 'marryDB.sqlite');
-export const db = new Database(dbPath);
+export const db: Database = new DatabaseCtor(dbPath);
 
 db.pragma('journal_mode = WAL');
 db.pragma('synchronous = NORMAL');
